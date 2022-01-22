@@ -6,5 +6,7 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="src" path="ressources"/>
+	<classpathentry kind="lib" path="C:/Users/drihu/eclipse/App-Workspace/BIT_scrabble/Protocol.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

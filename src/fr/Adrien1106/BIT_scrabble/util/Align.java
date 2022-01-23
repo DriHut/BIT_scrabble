@@ -1,8 +1,8 @@
 package fr.Adrien1106.BIT_scrabble.util;
 
 public enum Align {
-	VERTICAL(Direction.RIGHT),
-	HORIZONTAL(Direction.DOWN);
+	VERTICAL(Direction.DOWN),
+	HORIZONTAL(Direction.RIGHT);
 
 	private Direction direction;
 	
@@ -10,8 +10,19 @@ public enum Align {
 		this.direction = direction;
 	}
 	
+	/**
+	 * get the direction of the align
+	 * @return the direction of the align
+	 */
 	public Direction getDirection() {
 		return direction;
 	}
 	
+	/**
+	 * get the other align
+	 * @return the other align
+	 */
+	public Align other() {
+		return this.equals(HORIZONTAL)? VERTICAL: HORIZONTAL;
+	}
 }

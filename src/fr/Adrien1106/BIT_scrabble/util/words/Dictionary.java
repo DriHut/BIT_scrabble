@@ -12,11 +12,18 @@ public class Dictionary {
 	
 	private static List<String> glossary;
 	
+	/**
+	 * Read the dictionary from the default resource
+	 */
 	public static void loadFromRessource() {
         InputStream resourceStream = Dictionary.class.getResourceAsStream("/dictionary/collins_scrabble_words_2019.txt");
         load(resourceStream);
 	}
 	
+	/**
+	 * Load a list of word from an input stream
+	 * @param in - input stream to use for the dictionary
+	 */
 	private static void load(InputStream in) {
 		glossary = new ArrayList<>();
 		
@@ -38,10 +45,20 @@ public class Dictionary {
         
 	}
 	
+	/**
+	 * Checks if word is in the loaded dictionary
+	 * @param word - word to be checked
+	 * @return if the word is part of the dictionary
+	 */
 	public static boolean isWord(String word) {
 		return glossary.contains(word.toUpperCase());
 	}
 	
+	/**
+	 * Determine what possible words can be found from the string of given letters
+	 * @param letters - letters to use to make word
+	 * @return a list of possible words
+	 */
 	@Deprecated
 	public static List<String> getWords(String letters) {
 		for (String word: glossary) {

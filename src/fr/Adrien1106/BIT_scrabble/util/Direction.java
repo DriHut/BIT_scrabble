@@ -21,4 +21,18 @@ LEFT(-1,0);
 	public int getY() {
 		return y;
 	}
+	
+	/**
+	 * get the opposite direction
+	 * @return
+	 */
+	public Direction opposite() {
+		switch (this) {
+			case UP: return DOWN;
+			case DOWN: return UP;
+			case RIGHT: return LEFT;
+			case LEFT: return RIGHT;
+		}
+		return null;
+	}
 }

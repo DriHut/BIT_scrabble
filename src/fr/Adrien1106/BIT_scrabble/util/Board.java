@@ -16,6 +16,7 @@ public class Board {
 	
 	public Board(Modifier[][] modifiers) {
 		this.tiles = new Tile[SIZE][SIZE];
+		this.tiles_copy = new Tile[SIZE][SIZE];
 		flushBoard();
 		this.modifiers = modifiers;
 	}
@@ -24,13 +25,34 @@ public class Board {
 	 * Clear the board from all its tiles
 	 */
 	public void flushBoard() {
-		for(Tile[] row: tiles)
-			for(Tile tile: row)
-				tile = Tile.EMPTY;
+		for(int x = 0; x < SIZE; x++)
+			for(int y = 0; y < SIZE; y++)
+				tiles[x][y] = Tile.EMPTY;
 	}
 	
 	/**
+	 * Create a copy of the tiles do we don't work on the verified board
+	 */
+	private void buildCopy() {
+		for(int x = 0; x < SIZE; x++)
+			for(int y = 0; y < SIZE; y++)
+				tiles_copy[x][y] = tiles[x][y];
+	}
+	
+
+	/**
+	 * Saves the copy when accepted move
+	 */
+	private void saveCopy() {
+		for(int x = 0; x < SIZE; x++)
+			for(int y = 0; y < SIZE; y++)
+				tiles[x][y] = tiles_copy[x][y];
+	}
+	
+	
+	/**
 	 * Place a word on a board throws error if not achieved and return a score if achieved
+	 * @param coordinate - the string coordinates
 	 * @param word - word to be placed
 	 * @param align - the alignment of the placed word (horizontal or vertical)
 	 * @return - the score achieved by that move
@@ -47,7 +69,7 @@ public class Board {
 		if (!isOnBoard(x, y)) throw new WrongCoordinateException(coordinate);
 		if (!isOnBoard(x + word.length()*align.getDirection().getX(), y + word.length()*align.getDirection().getY())) throw new WordOutOfBoundsException();
 		
-		tiles_copy = tiles.clone();
+		buildCopy();
 		
 		// try placing letter one by one
 		int new_x = x, new_y = y;
@@ -63,9 +85,15 @@ public class Board {
 			new_y += align.getDirection().getY();
 		}
 		
+		// no new connection == not linked except for first turn
+		if (tiles_copy[SIZE/2][SIZE/2].equals(Tile.EMPTY) 
+				|| (score == 0 && getUsedLetters(coordinate, word, align).length() == word.length() && !tiles[SIZE/2][SIZE/2].equals(Tile.EMPTY)) 
+				|| getUsedLetters(coordinate, word, align).length() == 0) 
+			throw new CantPlaceWordHereException();
+		
 		// reverse the last move
-		new_x += align.getDirection().getX();
-		new_y += align.getDirection().getY();
+		new_x -= align.getDirection().getX();
+		new_y -= align.getDirection().getY();
 		
 		// replace the last letter to score the word that has been placed
 		tiles_copy[new_x][new_y] = Tile.EMPTY;
@@ -75,9 +103,42 @@ public class Board {
 			throw new CantPlaceWordHereException();
 		}
 		
-		// set the board to the copy since the placing has been approved
-		tiles = tiles_copy.clone();
 		return score;
+	}
+	
+	/**
+	 * Saves the last move after being verified
+	 */
+	public void saveMove() {
+		// set the board to the copy since the placing has been approved
+		saveCopy();
+		// remove modifiers so they don't get used again
+		for(int x = 0; x < SIZE; x++)
+			for(int y = 0; y < SIZE; y++)
+				if (!tiles[x][y].equals(Tile.EMPTY)) modifiers[x][y] = Modifier.NONE;
+	}
+	
+	/**
+	 * Determines the letter used for the current move (called after place and before saveMove)
+	 * @param coordinate - the string coordinates
+	 * @param word - word to be placed
+	 * @param align - the alignment of the placed word (horizontal or vertical)
+	 * @return a list of the letter used
+	 * @throws WrongCoordinateException
+	 */
+	public String getUsedLetters(String coordinate, String word, Align align) throws WrongCoordinateException {
+		String letters = "";
+		if (coordinate.length() < 2 ) throw new WrongCoordinateException(coordinate);
+		int x = letterToCoord(coordinate.charAt(0));
+		int y = Integer.valueOf(coordinate.substring(1)) - 1;
+
+		for (String letter: word.split("")) {
+			if (!tiles[x][y].getLetter().equals(letter)) letters += letter;
+			x += align.getDirection().getX();
+			y += align.getDirection().getY();
+		}
+		
+		return letters;
 	}
 	
 	/**
@@ -93,19 +154,19 @@ public class Board {
 		// ignore if letter already placed
 		if (tiles_copy[x][y].getLetter().equals(letter)) return 0;
 		
-		Direction check_direction = align.other().getDirection().opposite();
-		// skip the process if no new words formed
-		if (hasAdjacent(x, y, check_direction) && hasAdjacent(x, y, check_direction.opposite())) return 0;
-		
 		// place the letter on the copy
 		tiles_copy[x][y] = Tile.fromLetter(letter);
+		
+		Direction check_direction = align.other().getDirection().opposite();
+		// skip the process if no new words formed
+		if (!hasAdjacent(x, y, check_direction) && !hasAdjacent(x, y, check_direction.opposite())) return 0;
 		
 		// go up until there is not letter before
 		while(hasAdjacent(x, y, check_direction)) {
 			x += check_direction.getX();
 			y += check_direction.getY();
 		}
-		check_direction.opposite(); // reverse direction to get the word that has been formed
+		check_direction = check_direction.opposite(); // reverse direction to get the word that has been formed
 		
 		// save word starting point
 		int new_x = x, new_y = y;
@@ -146,7 +207,7 @@ public class Board {
 		
 		if (!isOnBoard(x, y)) return false;
 		
-		return !tiles[x][y].equals(Tile.EMPTY);
+		return !tiles_copy[x][y].equals(Tile.EMPTY);
 	}
 	
 	/**
@@ -190,5 +251,18 @@ public class Board {
 		score *= const_multiplier;
 		
 		return score;
+	}
+	
+	/**
+	 * Used for debugging prints the state of the board
+	 */
+	public void print() {
+		for(int y = 0; y < SIZE; y++) {
+			for(int x = 0; x < SIZE; x++) {
+				if (!tiles[x][y].equals(Tile.EMPTY)) System.out.print(tiles[x][y].getLetter() + " ,");
+				else System.out.print(modifiers[x][y].getId() + ",");
+			}
+			System.out.println("");
+		}
 	}
 }

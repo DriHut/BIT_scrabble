@@ -18,7 +18,7 @@ L(1,"l"),
 M(3,"m"),
 N(1,"n"),
 O(1,"o"),
-P(3,"P"),
+P(3,"p"),
 Q(10,"q"),
 R(1,"r"),
 S(1,"s"),
@@ -47,9 +47,11 @@ Z(10,"z");
 	}
 	
 	public static Tile fromLetter(String letter) {
-		for (Tile tile: Tile.values())
+		for (Tile tile: Tile.values()) {
 			if (tile.getLetter().equalsIgnoreCase(letter))
 				return tile;
+			
+		}
 		return Tile.EMPTY;
 	}
 }

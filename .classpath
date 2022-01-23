@@ -8,5 +8,6 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="ressources"/>
 	<classpathentry kind="lib" path="C:/Users/drihu/eclipse/App-Workspace/BIT_scrabble/Protocol.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/5"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

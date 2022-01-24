@@ -6,11 +6,11 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import fr.Adrien1106.BIT_scrabble.exceptions.CantPlaceWordHereException;
 import fr.Adrien1106.BIT_scrabble.util.Align;
 import fr.Adrien1106.BIT_scrabble.util.Board;
 import fr.Adrien1106.BIT_scrabble.util.ModifierBoard;
 import fr.Adrien1106.BIT_scrabble.util.words.Dictionary;
+import fr.Adrien1106.util.exceptions.CantPlaceWordHereException;
 import fr.Adrien1106.util.exceptions.WordOutOfBoundsException;
 import fr.Adrien1106.util.exceptions.WrongCoordinateException;
 

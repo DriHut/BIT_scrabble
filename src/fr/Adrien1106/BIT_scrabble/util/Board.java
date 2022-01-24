@@ -1,12 +1,11 @@
 package fr.Adrien1106.BIT_scrabble.util;
 
 import fr.Adrien1106.BIT_scrabble.exceptions.CantPlaceLetterHereException;
-import fr.Adrien1106.BIT_scrabble.exceptions.CantPlaceWordHereException;
 import fr.Adrien1106.BIT_scrabble.util.words.Dictionary;
-import fr.Adrien1106.util.exceptions.WordOutOfBoundsException;
-import fr.Adrien1106.util.exceptions.WrongCoordinateException;
+import fr.Adrien1106.util.exceptions.*;
+import fr.Adrien1106.util.interfaces.IBoard;
 
-public class Board {
+public class Board implements IBoard {
 	
 	public static final int SIZE = 15;
 	
@@ -253,16 +252,32 @@ public class Board {
 		return score;
 	}
 	
+	@Override
+	public String toString() {
+		String board = "";
+		for(int y = 0; y < SIZE; y++) {
+			for(int x = 0; x < SIZE-1; x++) {
+				board += tiles[x][y].getLetter() + ",";
+			}
+			board += tiles[SIZE-1][y].getLetter() + "\n";
+		}
+		return board;
+	}
+	
+
 	/**
 	 * Used for debugging prints the state of the board
 	 */
-	public void print() {
+	public String getString() {
+		String board = "";
 		for(int y = 0; y < SIZE; y++) {
-			for(int x = 0; x < SIZE; x++) {
-				if (!tiles[x][y].equals(Tile.EMPTY)) System.out.print(tiles[x][y].getLetter() + " ,");
-				else System.out.print(modifiers[x][y].getId() + ",");
+			for(int x = 0; x < SIZE-1; x++) {
+				if (!tiles[x][y].equals(Tile.EMPTY)) board += tiles[x][y].getLetter() + " ,";
+				else board += modifiers[x][y].getId() + ",";
 			}
-			System.out.println("");
+			if (!tiles[SIZE-1][y].equals(Tile.EMPTY)) board += tiles[SIZE-1][y].getLetter() + " \n";
+			else board += modifiers[SIZE-1][y].getId() + "\n";
 		}
+		return board;
 	}
 }

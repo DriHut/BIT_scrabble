@@ -3,12 +3,13 @@ package fr.Adrien1106.BIT_scrabble.game;
 import java.util.ArrayList;
 import java.util.List;
 
-import fr.Adrien1106.BIT_scrabble.util.Tile;
+import fr.Adrien1106.BIT_scrabble.server.ServerGame;
+import fr.Adrien1106.BIT_scrabble.util.Tiles;
 import fr.Adrien1106.util.interfaces.IPlayer;
 
 public class Player implements IPlayer {
 
-	private List<Tile> tile_rack;
+	private List<Tiles> tile_rack;
 	private String identifier;
 	private int score = 0;
 	
@@ -27,14 +28,14 @@ public class Player implements IPlayer {
 	
 	public void addTiles(String letters) {
 		for (String letter: letters.split("")) {
-			tile_rack.add(Tile.fromLetter(letter));
+			tile_rack.add((Tiles) Tiles.fromLetter(letter));
 		}
 	}
 	
 	public void removeTiles(String letters) {
-		List<Tile> rack_copy = copyRack();
+		List<Tiles> rack_copy = copyRack();
 		for (String letter: letters.split("")) {
-			for(Tile tile: tile_rack)
+			for(Tiles tile: tile_rack)
 				if (letter.equals(tile.getLetter())) {
 					rack_copy.remove(tile);
 					break;
@@ -44,10 +45,11 @@ public class Player implements IPlayer {
 	}
 	
 	public boolean hasTiles(String letters) {
-		List<Tile> rack_copy = copyRack();
+		List<Tiles> rack_copy = copyRack();
 		for (String letter: letters.split("")) {
+			ServerGame.INSTANCE.log("letter: " + letter);
 			boolean has = false;
-			for(Tile tile: rack_copy)
+			for(Tiles tile: rack_copy)
 				if (letter.equals(tile.getLetter())) {
 					rack_copy.remove(tile);
 					has = true;
@@ -58,9 +60,9 @@ public class Player implements IPlayer {
 		return true;
 	}
 	
-	protected List<Tile> copyRack() {
-		List<Tile> copy = new ArrayList<>();
-		for (Tile tile: tile_rack)
+	protected List<Tiles> copyRack() {
+		List<Tiles> copy = new ArrayList<>();
+		for (Tiles tile: tile_rack)
 			copy.add(tile);
 		return copy;
 	}
@@ -79,7 +81,7 @@ public class Player implements IPlayer {
 	
 	public String getTiles() {
 		String tiles = "";
-		for (Tile tile: tile_rack)
+		for (Tiles tile: tile_rack)
 			tiles += tile.getLetter();
 		return tiles;
 	}

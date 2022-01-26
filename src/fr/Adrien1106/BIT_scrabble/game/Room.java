@@ -8,8 +8,8 @@ import fr.Adrien1106.BIT_scrabble.main.References;
 import fr.Adrien1106.BIT_scrabble.server.ServerGame;
 import fr.Adrien1106.BIT_scrabble.util.Board;
 import fr.Adrien1106.BIT_scrabble.util.ModifierBoard;
-import fr.Adrien1106.BIT_scrabble.util.Tile;
 import fr.Adrien1106.BIT_scrabble.util.TileBag;
+import fr.Adrien1106.BIT_scrabble.util.Tiles;
 import fr.Adrien1106.util.exceptions.TooFewPlayersException;
 import fr.Adrien1106.util.exceptions.TooManyPlayersException;
 import fr.Adrien1106.util.interfaces.IBoard;
@@ -20,7 +20,7 @@ public class Room implements IRoom {
 
 	private int id;
 	private List<IPlayer> players;
-	private List<Tile> bag;
+	private List<Tiles> bag;
 	private Board board;
 	
 	private Player current_player;
@@ -100,11 +100,11 @@ public class Room implements IRoom {
 	 * Retrieve a tile from the bag. Be aware the tiles gets removed from the bag
 	 * @return a tile
 	 */
-	public Tile getTile() {
+	public Tiles getTile() {
 		if (bag.isEmpty()) return null;
 		Random rand = new Random();
 		
-		Tile tile = bag.get(rand.nextInt(bag.size()));
+		Tiles tile = bag.get(rand.nextInt(bag.size()));
 		bag.remove(tile);
 		
 		return tile;
@@ -114,7 +114,7 @@ public class Room implements IRoom {
 	 * Add a tile to the bag
 	 * @param tile - tile to be added
 	 */
-	public void addTile(Tile tile) {
+	public void addTile(Tiles tile) {
 		bag.add(tile);
 	}
 	
@@ -124,7 +124,7 @@ public class Room implements IRoom {
 	 */
 	public void addTiles(String letters) {
 		for (String letter: letters.split("")) {
-			addTile(Tile.fromLetter(letter));
+			addTile((Tiles) Tiles.fromLetter(letter));
 		}
 	}
 

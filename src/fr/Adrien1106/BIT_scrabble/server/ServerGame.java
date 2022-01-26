@@ -129,7 +129,7 @@ public class ServerGame implements ServerProtocol, Runnable {
 	}
 	
 	public void log(String message) {
-		print("[LOG] " + message);
+		print("> \u001b[34m[LOG]\u001b[0m " + message);
 	}
 	
 	public void print(String message) {

@@ -26,7 +26,7 @@ public class Board implements IBoard {
 	public void flushBoard() {
 		for(int x = 0; x < SIZE; x++)
 			for(int y = 0; y < SIZE; y++)
-				tiles[x][y] = Tile.EMPTY;
+				tiles[x][y] = Tiles.EMPTY;
 	}
 	
 	/**
@@ -73,21 +73,31 @@ public class Board implements IBoard {
 		// try placing letter one by one
 		int new_x = x, new_y = y;
 		int score = 0;
+		Tile tile = Tiles.EMPTY;
+		boolean is_sub_letter = false;
 		for (String letter: word.split("")) {
+			if (!is_sub_letter) tile = Tiles.fromLetter(letter);
+			if (letter.equals(Tiles.BLANK.getLetter())) {
+				is_sub_letter = true;
+				continue;
+			}
 			try {
-				score += placeLetter(new_x, new_y, letter, align);
+				if (is_sub_letter) tile = new BlankTile(letter);;
+				score += placeTile(new_x, new_y, tile, align);
 			} catch (CantPlaceLetterHereException e) {
 				e.printStackTrace();
 				throw new CantPlaceWordHereException();
 			}
 			new_x += align.getDirection().getX();
 			new_y += align.getDirection().getY();
+			is_sub_letter = false;
 		}
 		
 		// no new connection == not linked except for first turn
-		if (tiles_copy[SIZE/2][SIZE/2].equals(Tile.EMPTY) 
-				|| (score == 0 && getUsedLetters(coordinate, word, align).length() == word.length() && !tiles[SIZE/2][SIZE/2].equals(Tile.EMPTY)) 
-				|| getUsedLetters(coordinate, word, align).length() == 0) 
+		int used_length = getUsedTiles(coordinate, word, align).length();
+		if (tiles_copy[SIZE/2][SIZE/2].equals(Tiles.EMPTY) 
+				|| (score == 0 && used_length == word.length() && !tiles[SIZE/2][SIZE/2].equals(Tiles.EMPTY)) 
+				|| used_length == 0) 
 			throw new CantPlaceWordHereException();
 		
 		// reverse the last move
@@ -95,9 +105,9 @@ public class Board implements IBoard {
 		new_y -= align.getDirection().getY();
 		
 		// replace the last letter to score the word that has been placed
-		tiles_copy[new_x][new_y] = Tile.EMPTY;
+		tiles_copy[new_x][new_y] = Tiles.EMPTY;
 		try {
-			score += placeLetter(new_x, new_y, word.substring(word.length()-1), align.other());
+			score += placeTile(new_x, new_y, tile, align.other());
 		} catch (CantPlaceLetterHereException e) {
 			throw new CantPlaceWordHereException();
 		}
@@ -114,7 +124,7 @@ public class Board implements IBoard {
 		// remove modifiers so they don't get used again
 		for(int x = 0; x < SIZE; x++)
 			for(int y = 0; y < SIZE; y++)
-				if (!tiles[x][y].equals(Tile.EMPTY)) modifiers[x][y] = Modifier.NONE;
+				if (!tiles[x][y].equals(Tiles.EMPTY)) modifiers[x][y] = Modifier.NONE;
 	}
 	
 	/**
@@ -125,16 +135,22 @@ public class Board implements IBoard {
 	 * @return a list of the letter used
 	 * @throws WrongCoordinateException
 	 */
-	public String getUsedLetters(String coordinate, String word, Align align) throws WrongCoordinateException {
+	public String getUsedTiles(String coordinate, String word, Align align) throws WrongCoordinateException {
 		String letters = "";
 		if (coordinate.length() < 2 ) throw new WrongCoordinateException(coordinate);
 		int x = letterToCoord(coordinate.charAt(0));
 		int y = Integer.valueOf(coordinate.substring(1)) - 1;
 
+		boolean skip = false;
 		for (String letter: word.split("")) {
-			if (!tiles[x][y].getLetter().equals(letter)) letters += letter;
+			if (!tiles[x][y].getLetter().equals(letter) && !skip) letters += letter;
 			x += align.getDirection().getX();
 			y += align.getDirection().getY();
+			if (letter.equals(Tiles.BLANK.getLetter())) {
+				skip = true;
+				continue;
+			}
+			skip = false;
 		}
 		
 		return letters;
@@ -149,12 +165,12 @@ public class Board implements IBoard {
 	 * @return the score if the letter can be placed
 	 * @throws CantPlaceLetterHereException
 	 */
-	protected int placeLetter(int x, int y, String letter, Align align) throws CantPlaceLetterHereException {
+	protected int placeTile(int x, int y, Tile letter, Align align) throws CantPlaceLetterHereException {
 		// ignore if letter already placed
-		if (tiles_copy[x][y].getLetter().equals(letter)) return 0;
+		if (tiles_copy[x][y].getLetter().equals(letter.getLetter())) return 0;
 		
 		// place the letter on the copy
-		tiles_copy[x][y] = Tile.fromLetter(letter);
+		tiles_copy[x][y] = letter;
 		
 		Direction check_direction = align.other().getDirection().opposite();
 		// skip the process if no new words formed
@@ -171,15 +187,15 @@ public class Board implements IBoard {
 		int new_x = x, new_y = y;
 		
 		// forms the new word and check its validity
-		String word = tiles_copy[x][y].getLetter();
+		String word = tiles_copy[x][y].getSubLetter();
 		while(hasAdjacent(x, y, check_direction)) {
 			x += check_direction.getX();
 			y += check_direction.getY();
-			word += tiles_copy[x][y].getLetter();
+			word += tiles_copy[x][y].getSubLetter();
 		}
 		
 		// check if the word is valid
-		if (!Dictionary.isWord(word)) throw new CantPlaceLetterHereException(letter, "a new formed word is not valid");
+		if (!Dictionary.isWord(word)) throw new CantPlaceLetterHereException(letter.getSubLetter(), "a new formed word is not valid");
 		
 		return score(new_x, new_y, word, check_direction);
 	}
@@ -206,7 +222,7 @@ public class Board implements IBoard {
 		
 		if (!isOnBoard(x, y)) return false;
 		
-		return !tiles_copy[x][y].equals(Tile.EMPTY);
+		return !tiles_copy[x][y].equals(Tiles.EMPTY);
 	}
 	
 	/**
@@ -257,9 +273,11 @@ public class Board implements IBoard {
 		String board = "";
 		for(int y = 0; y < SIZE; y++) {
 			for(int x = 0; x < SIZE-1; x++) {
-				board += tiles[x][y].getLetter() + ",";
+				if (tiles[x][y] instanceof BlankTile) board += tiles[x][y].getLetter() + tiles[x][y].getSubLetter() +",";
+				else board += tiles[x][y].getLetter() + ",";
 			}
-			board += tiles[SIZE-1][y].getLetter();
+			if (tiles[SIZE-1][y] instanceof BlankTile) board += tiles[SIZE-1][y].getLetter() + tiles[SIZE-1][y].getSubLetter() +",";
+			else board += tiles[SIZE-1][y].getLetter();
 			if (y != SIZE-1) board += "//";
 		}
 		return board;
@@ -269,8 +287,10 @@ public class Board implements IBoard {
 		String[] rows = board.split("//");
 		for(int y = 0; y < rows.length; y++) {
 			String[] row = rows[y].split(",");
-			for(int x = 0; x < row.length; x++)
-				tiles[x][y] = Tile.fromLetter(row[x]);
+			for(int x = 0; x < row.length; x++) {
+				if (row[x].length() == 2 && row[x].contains(Tiles.BLANK.getLetter())) tiles[x][y] = new BlankTile(row[x].split("")[1]);
+				else tiles[x][y] = Tiles.fromLetter(row[x]);
+			}
 		}
 	}
 	
@@ -282,11 +302,15 @@ public class Board implements IBoard {
 		String board = "";
 		for(int y = 0; y < SIZE; y++) {
 			for(int x = 0; x < SIZE-1; x++) {
-				if (!tiles[x][y].equals(Tile.EMPTY)) board += tiles[x][y].getLetter() + " ,";
-				else board += modifiers[x][y].getId() + ",";
+				if (tiles[x][y] instanceof BlankTile) board += tiles[x][y].getLetter() + tiles[x][y].getSubLetter();
+				else if (!tiles[x][y].equals(Tiles.EMPTY)) board += tiles[x][y].getLetter() + " ";
+				else board += modifiers[x][y].getId();
+				board += ",";
 			}
-			if (!tiles[SIZE-1][y].equals(Tile.EMPTY)) board += tiles[SIZE-1][y].getLetter() + " \n";
-			else board += modifiers[SIZE-1][y].getId() + "\n";
+			if (tiles[SIZE-1][y] instanceof BlankTile) board += tiles[SIZE-1][y].getLetter() + tiles[SIZE-1][y].getSubLetter();
+			else if (!tiles[SIZE-1][y].equals(Tiles.EMPTY)) board += tiles[SIZE-1][y].getLetter() + " ";
+			else board += modifiers[SIZE-1][y].getId();
+			if (y != SIZE - 1) board += "\n";
 		}
 		return board;
 	}

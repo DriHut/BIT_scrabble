@@ -30,7 +30,7 @@ public class ServerHandler implements Runnable, IServerHandler {
 			sendCommand(ProtocolMessages.CONNECT, Arrays.asList(name));
 			String msg = input_reader.readLine();
 			while (msg != null) {
-				ClientGame.INSTANCE.print("> [server] Incoming: " + msg);
+				ClientGame.INSTANCE.print("> \u001b[32m[server]\u001b[0m Incoming: " + msg);
 				handleCommand(msg);
 				msg = input_reader.readLine();
 			}

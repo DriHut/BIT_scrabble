@@ -12,14 +12,14 @@ public enum TileBag {
 		this.tile_list = tile_list;
 	}
 	
-	public List<Tile> getBag() {
-		List<Tile> bag = new ArrayList<>();
+	public List<Tiles> getBag() {
+		List<Tiles> bag = new ArrayList<>();
 		String[] letters = tile_list.split(",");
 		for (int i = 0; i < letters.length; i++) {
 			int amount = Integer.valueOf(letters[i].split("x")[0]);
-			Tile tile = Tile.fromLetter(letters[i].split("x")[1]);
+			Tile tile = Tiles.fromLetter(letters[i].split("x")[1]);
 			for (int j = 0; j < amount; j++)
-				bag.add(tile);
+				bag.add((Tiles) tile);
 		}
 		return bag;
 	}

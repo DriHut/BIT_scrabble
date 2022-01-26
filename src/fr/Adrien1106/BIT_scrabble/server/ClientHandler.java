@@ -57,7 +57,7 @@ public class ClientHandler implements Runnable, IClientHandler {
 		try {
 			msg = input_stream.readLine();
 			while (msg != null) {
-				ServerGame.INSTANCE.print("> [" + client_id + "] Incoming: " + msg);
+				ServerGame.INSTANCE.print("> \u001b[32m[CLIENT#" + client_id + "]\u001b[0m Incoming: " + msg);
 				try {
 					handleCommand(msg);
 				} catch (Exception e) {
@@ -78,37 +78,37 @@ public class ClientHandler implements Runnable, IClientHandler {
 			switch (cmd[0]) {
 			case ProtocolMessages.CONNECT:
 				if (cmd.length != 2) return;
-				ServerGame.INSTANCE.print("> [CLIENT#" + client_id + "] connect");
+				ServerGame.INSTANCE.print("> \u001b[32m[CLIENT#" + client_id + "]\u001b[0m connect");
 				handleConnect(msg.split(ProtocolMessages.DELIMITER)[1]);
 				return;
 			case ProtocolMessages.CREATE_ROOM:
 				if (cmd.length != 2) return;
-				ServerGame.INSTANCE.print("> [CLIENT#" + client_id + "] create room");
+				ServerGame.INSTANCE.print("> \u001b[32m[CLIENT#" + client_id + "]\u001b[0m create room");
 				handleCreateRoom(cmd[1]);
 				return;
 			case ProtocolMessages.JOIN_ROOM:
 				if (cmd.length != 2) return;
-				ServerGame.INSTANCE.print("> [CLIENT#" + client_id + "] join room");
+				ServerGame.INSTANCE.print("> \u001b[32m[CLIENT#" + client_id + "]\u001b[0m join room");
 				handleJoinRoom(cmd[1]);
 				return;
 			case ProtocolMessages.MAKE_MOVE:
 				if (cmd.length != 4) return;
-				ServerGame.INSTANCE.print("> [ROOM#" + room.getId() + ":" + client_id + "] makes move");
+				ServerGame.INSTANCE.print("> \u001b[36m[ROOM#" + room.getId() + ":" + client_id + "]\u001b[0m makes move");
 				handleMove(cmd[1],cmd[2],cmd[3]);
 				return;
 			case ProtocolMessages.SKIP_TURN:
 				if (cmd.length != 1) return;
-				ServerGame.INSTANCE.print("> [ROOM#" + room.getId() + ":" + client_id + "] skip turn");
+				ServerGame.INSTANCE.print("> \u001b[36m[ROOM#" + room.getId() + ":" + client_id + "]\u001b[0m skip turn");
 				handleSkip();
 				return;
 			case ProtocolMessages.REPLACE_TILES:
 				if (cmd.length != 2) return;
-				ServerGame.INSTANCE.print("> [ROOM#" + room.getId() + ":" + client_id + "] replace tiles");
+				ServerGame.INSTANCE.print("> \u001b[36m[ROOM#" + room.getId() + ":" + client_id + "]\u001b[0m replace tiles");
 				handleReplaceTiles(cmd[1]);
 				return;
 			case ProtocolMessages.CUSTOM_COMMAND + "fs":
 				if (cmd.length != 1) return;
-				ServerGame.INSTANCE.print("> [ROOM#" + room.getId() + ":" + client_id + "] force start");
+				ServerGame.INSTANCE.print("> \u001b[36m[ROOM#" + room.getId() + ":" + client_id + "]\u001b[0m force start");
 				handleForceStart();
 				return;
 			default:
@@ -148,6 +148,7 @@ public class ClientHandler implements Runnable, IClientHandler {
 			output_stream.write(msg);
 			output_stream.newLine();
 			output_stream.flush();
+			ServerGame.INSTANCE.print("> \u001b[32m[CLIENT#" + client_id + "]\u001b[0m Sending: " + msg);
 		} catch (IOException e) {
 			ServerGame.INSTANCE.log(e.getMessage());
 		}
@@ -164,13 +165,13 @@ public class ClientHandler implements Runnable, IClientHandler {
 	}
 	
 	@Override
-	public void handleConnect(String name) throws InvalidNameException { //
+	public void handleConnect(String name) throws InvalidNameException {
 		player = new Player(name + "#" + client_id);
-		sendCommand(ProtocolMessages.FEEDBACK, Arrays.asList("true"));
+		sendCommand(ProtocolMessages.FEEDBACK, Arrays.asList(player.getIdentifier()));
 	}
 
 	@Override
-	public void handleJoinRoom(String room_id) throws RoomFullException, UnknownRoomException { //
+	public void handleJoinRoom(String room_id) throws RoomFullException, UnknownRoomException {
 		int id = Integer.valueOf(room_id);
 		room = ServerGame.INSTANCE.getRoom(id);
 		if (room == null) throw new UnknownRoomException(id);
@@ -196,7 +197,7 @@ public class ClientHandler implements Runnable, IClientHandler {
 	}
 
 	@Override
-	public void handleMove(String alignment, String coordinates, String word) throws NotOwnedTileException, NotTurnException, WordOutOfBoundsException, UnknownTileException, WrongCoordinateException, CantPlaceWordHereException { //
+	public void handleMove(String alignment, String coordinates, String word) throws NotOwnedTileException, NotTurnException, WordOutOfBoundsException, UnknownTileException, WrongCoordinateException, CantPlaceWordHereException {
 		Board board = (Board) room.getBoard();
 		Align align = Align.valueOf(alignment.toUpperCase());
 		
@@ -204,8 +205,8 @@ public class ClientHandler implements Runnable, IClientHandler {
 		try {
 			int score = board.place(coordinates, word, align);
 			
-			String used_letters = board.getUsedLetters(coordinates, word, align);
-			if (!player.hasTiles(word)) throw new NotOwnedTileException(used_letters);
+			String used_letters = board.getUsedTiles(coordinates, word, align);
+			if (!player.hasTiles(used_letters)) throw new NotOwnedTileException(player.getTiles() + ": " + used_letters);
 			
 			player.removeTiles(used_letters);
 			used_letters = getNewTiles(used_letters.length());
@@ -228,7 +229,7 @@ public class ClientHandler implements Runnable, IClientHandler {
 	}
 
 	@Override
-	public void handleReplaceTiles(String tiles) throws NotOwnedTileException, NotTurnException { //
+	public void handleReplaceTiles(String tiles) throws NotOwnedTileException, NotTurnException { 
 		if (!room.isTurn(player)) throw new NotTurnException();
 		if (!player.hasTiles(tiles)) throw new NotOwnedTileException(tiles);
 		String new_tiles = getNewTiles(tiles.length());
@@ -254,7 +255,7 @@ public class ClientHandler implements Runnable, IClientHandler {
 		room.next();
 	}
 
-	public void handleForceStart() throws TooFewPlayersException { //
+	public void handleForceStart() throws TooFewPlayersException {
 		room.start();
 	}
 	

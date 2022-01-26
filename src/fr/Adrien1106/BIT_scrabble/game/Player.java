@@ -47,7 +47,6 @@ public class Player implements IPlayer {
 	public boolean hasTiles(String letters) {
 		List<Tiles> rack_copy = copyRack();
 		for (String letter: letters.split("")) {
-			ServerGame.INSTANCE.log("letter: " + letter);
 			boolean has = false;
 			for(Tiles tile: rack_copy)
 				if (letter.equals(tile.getLetter())) {

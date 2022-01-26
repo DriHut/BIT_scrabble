@@ -3,6 +3,8 @@ package fr.Adrien1106.BIT_scrabble.main;
 import fr.Adrien1106.BIT_scrabble.util.Align;
 import fr.Adrien1106.BIT_scrabble.util.Board;
 import fr.Adrien1106.BIT_scrabble.util.ModifierBoard;
+import fr.Adrien1106.BIT_scrabble.util.Tile;
+import fr.Adrien1106.BIT_scrabble.util.TileBag;
 import fr.Adrien1106.BIT_scrabble.util.words.Dictionary;
 import fr.Adrien1106.util.exceptions.CantPlaceWordHereException;
 import fr.Adrien1106.util.exceptions.WordOutOfBoundsException;
@@ -19,6 +21,6 @@ public class Main {
 			board.saveMove();
 		} catch (NumberFormatException | WrongCoordinateException | WordOutOfBoundsException
 				| CantPlaceWordHereException e) {}
-		System.out.print(board.toString());
+		System.out.print(board.getString());
 	}
 }

@@ -14,6 +14,7 @@ public class Player implements IPlayer {
 	
 	public Player(String identifier) {
 		this.identifier = identifier;
+		this.tile_rack = new ArrayList<>();
 	}
 	
 	public String getIdentifier() {
@@ -31,24 +32,28 @@ public class Player implements IPlayer {
 	}
 	
 	public void removeTiles(String letters) {
+		List<Tile> rack_copy = copyRack();
 		for (String letter: letters.split("")) {
 			for(Tile tile: tile_rack)
 				if (letter.equals(tile.getLetter())) {
-					tile_rack.remove(tile);
-					continue;
+					rack_copy.remove(tile);
+					break;
 				}
 		}
+		tile_rack = rack_copy;
 	}
 	
 	public boolean hasTiles(String letters) {
 		List<Tile> rack_copy = copyRack();
 		for (String letter: letters.split("")) {
+			boolean has = false;
 			for(Tile tile: rack_copy)
 				if (letter.equals(tile.getLetter())) {
 					rack_copy.remove(tile);
-					continue;
+					has = true;
+					break;
 				}
-			return false;
+			if (!has) return false;
 		}
 		return true;
 	}
@@ -66,5 +71,16 @@ public class Player implements IPlayer {
 
 	public int getScore() {
 		return score;
+	}
+
+	public void setScore(int score) {
+		this.score = score;
+	}
+	
+	public String getTiles() {
+		String tiles = "";
+		for (Tile tile: tile_rack)
+			tiles += tile.getLetter();
+		return tiles;
 	}
 }

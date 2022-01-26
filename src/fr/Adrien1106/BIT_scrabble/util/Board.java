@@ -259,9 +259,19 @@ public class Board implements IBoard {
 			for(int x = 0; x < SIZE-1; x++) {
 				board += tiles[x][y].getLetter() + ",";
 			}
-			board += tiles[SIZE-1][y].getLetter() + "\n";
+			board += tiles[SIZE-1][y].getLetter();
+			if (y != SIZE-1) board += "//";
 		}
 		return board;
+	}
+
+	public void fromString(String board) {
+		String[] rows = board.split("//");
+		for(int y = 0; y < rows.length; y++) {
+			String[] row = rows[y].split(",");
+			for(int x = 0; x < row.length; x++)
+				tiles[x][y] = Tile.fromLetter(row[x]);
+		}
 	}
 	
 

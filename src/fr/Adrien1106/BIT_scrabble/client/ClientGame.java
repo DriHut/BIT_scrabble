@@ -3,7 +3,6 @@ package fr.Adrien1106.BIT_scrabble.client;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -11,14 +10,18 @@ import java.util.List;
 import fr.Adrien1106.BIT_scrabble.game.Player;
 import fr.Adrien1106.BIT_scrabble.util.Board;
 import fr.Adrien1106.BIT_scrabble.util.ModifierBoard;
+import fr.Adrien1106.BIT_scrabble.util.IO.Printer;
+import fr.Adrien1106.BIT_scrabble.util.IO.SystemPrinter;
 import fr.Adrien1106.util.interfaces.IPlayer;
 import fr.Adrien1106.util.protocol.ProtocolMessages;
 
 public class ClientGame implements Runnable {
 	
 	public static final ClientGame INSTANCE = new ClientGame();
-	private static PrintStream out = System.out;
+	public static Printer out;
 	
+	public static boolean HAS_GUI = false;
+	public static boolean IS_RUNNING = true;
 
 	private Player player;
 	private ServerHandler server_handler;
@@ -28,6 +31,7 @@ public class ClientGame implements Runnable {
 	
 	public ClientGame() {
 		players = new ArrayList<>();
+		player = new Player("dummy#0");
 		board = new Board(ModifierBoard.convertFromString(ModifierBoard.spreadBoard(Board.SIZE, ModifierBoard.BOARD_I)));
 	}
 
@@ -35,18 +39,18 @@ public class ClientGame implements Runnable {
 	public void run() {
 		server_handler = new ServerHandler();
 		new Thread(server_handler).start();
-		while (true) {
-			ListenToConsole();
-		}
+		if (out instanceof SystemPrinter)
+			while (ClientGame.IS_RUNNING)
+				ListenToConsole();
 	}
 	
 	public synchronized void addPlayer(String identifier) {
-		players.add(new Player(identifier));
+		if (getPlayer(identifier) == null) players.add(new Player(identifier));
 	}
 	
 	public void ListenToConsole() {
 		String line = null;
-		while (line == null) {
+		while (line == null && ClientGame.IS_RUNNING) {
 			BufferedReader reader = new BufferedReader( new InputStreamReader(System.in));
 			 
 	        try {
@@ -57,15 +61,19 @@ public class ClientGame implements Runnable {
 			
 		}
 		handleInput(line);
-        //server_handler.sendCommand(line.split(";")[0], Arrays.asList(line.replace(line.split(";")[0] + ";", "")));
 	}
 	
-	private void handleInput(String line) {
+	public void handleInput(String line) {
+		if (ServerHandler.name.equals("")) {
+			ServerHandler.name = line;
+			return;
+		}
 		String[] cmd = line.split(";");
 		if (cmd.length == 0) return;
 		switch (cmd[0]) {
 		case ProtocolMessages.SKIP_TURN:
 		case ProtocolMessages.CUSTOM_COMMAND + "fs":
+		case ProtocolMessages.CUSTOM_COMMAND + "fx":
 			if (cmd.length != 1) return;
 			server_handler.sendCommand(cmd[0], Arrays.asList(""));
 		case ProtocolMessages.CONNECT:
@@ -112,7 +120,13 @@ public class ClientGame implements Runnable {
 		this.player = player;
 	}
 	
-	public static void main(String[] args) {
-		new Thread(new ClientGame()).start();
+	public List<IPlayer> getPlayers() {
+		return players;
 	}
+	
+	public static void main(String[] args) {
+		ClientGame.out = new SystemPrinter();
+		new Thread(ClientGame.INSTANCE).start();
+	}
+
 }

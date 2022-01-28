@@ -62,7 +62,7 @@ public class Board implements IBoard {
 	 */
 	public int place(String coordinate, String word, Align align) throws WrongCoordinateException, NumberFormatException, WordOutOfBoundsException, CantPlaceWordHereException {
 		if (coordinate.length() < 2 ) throw new WrongCoordinateException(coordinate);
-		int x = letterToCoord(coordinate.charAt(0));
+		int x = letterToCoord(coordinate.toUpperCase().charAt(0));
 		int y = Integer.valueOf(coordinate.substring(1)) - 1;
 		
 		if (!isOnBoard(x, y)) throw new WrongCoordinateException(coordinate);
@@ -138,7 +138,7 @@ public class Board implements IBoard {
 	public String getUsedTiles(String coordinate, String word, Align align) throws WrongCoordinateException {
 		String letters = "";
 		if (coordinate.length() < 2 ) throw new WrongCoordinateException(coordinate);
-		int x = letterToCoord(coordinate.charAt(0));
+		int x = letterToCoord(coordinate.toUpperCase().charAt(0));
 		int y = Integer.valueOf(coordinate.substring(1)) - 1;
 
 		boolean skip = false;
@@ -313,5 +313,13 @@ public class Board implements IBoard {
 			if (y != SIZE - 1) board += "\n";
 		}
 		return board;
+	}
+	
+	public Modifier[][] getModifiers() {
+		return modifiers;
+	}
+
+	public Tile[][] getTiles() {
+		return tiles;
 	}
 }

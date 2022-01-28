@@ -15,7 +15,6 @@ import fr.Adrien1106.BIT_scrabble.main.References;
 import fr.Adrien1106.BIT_scrabble.util.words.Dictionary;
 import fr.Adrien1106.util.exceptions.TooFewPlayersException;
 import fr.Adrien1106.util.exceptions.TooManyPlayersException;
-import fr.Adrien1106.util.interfaces.IPlayer;
 import fr.Adrien1106.util.interfaces.IRoom;
 import fr.Adrien1106.util.protocol.ProtocolMessages;
 import fr.Adrien1106.util.protocol.ServerProtocol;
@@ -85,9 +84,11 @@ public class ServerGame implements ServerProtocol, Runnable {
 	public synchronized void doStart(IRoom room) {
 		List<String> args = new ArrayList<>();
 		args.add(room.getBoard().toString());
-		for (IPlayer player: room.getPlayers())
-			args.add(((Player) player).getIdentifier());
-		
+		String players = ((Player) room.getPlayers().get(0)).getIdentifier();
+		for (int i = 1; i < room.getPlayers().size(); i++)
+			players += "," + ((Player) room.getPlayers().get(i)).getIdentifier();
+		args.add(players);
+			
 		for (ClientHandler handler: clients)
 			if (room.getPlayers().contains(handler.getPlayer())) {
 				handler.sendCommand(ProtocolMessages.INITIATE_GAME, args);
@@ -120,7 +121,11 @@ public class ServerGame implements ServerProtocol, Runnable {
 	@Override
 	public synchronized void doFinish(IRoom room, String best_player, int score) {
 		for (ClientHandler handler: clients)
-			if (room.getPlayers().contains(handler.getPlayer())) handler.sendCommand(ProtocolMessages.FINISH_GAME, Arrays.asList(best_player, "" + score));
+			if (room.getPlayers().contains(handler.getPlayer())) {
+				handler.setRoom(null);
+				handler.getPlayer().removeTiles(handler.getPlayer().getTiles());
+				handler.sendCommand(ProtocolMessages.FINISH_GAME, Arrays.asList(best_player, "" + score));
+			}
 		rooms.remove(room);
 	}
 	

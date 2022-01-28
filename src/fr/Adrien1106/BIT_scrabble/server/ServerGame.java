@@ -120,7 +120,11 @@ public class ServerGame implements ServerProtocol, Runnable {
 	@Override
 	public synchronized void doFinish(IRoom room, String best_player, int score) {
 		for (ClientHandler handler: clients)
-			if (room.getPlayers().contains(handler.getPlayer())) handler.sendCommand(ProtocolMessages.FINISH_GAME, Arrays.asList(best_player, "" + score));
+			if (room.getPlayers().contains(handler.getPlayer())) {
+				handler.setRoom(null);
+				handler.getPlayer().removeTiles(handler.getPlayer().getTiles());
+				handler.sendCommand(ProtocolMessages.FINISH_GAME, Arrays.asList(best_player, "" + score));
+			}
 		rooms.remove(room);
 	}
 	

@@ -57,7 +57,6 @@ public class ClientGame implements Runnable {
 			
 		}
 		handleInput(line);
-        //server_handler.sendCommand(line.split(";")[0], Arrays.asList(line.replace(line.split(";")[0] + ";", "")));
 	}
 	
 	private void handleInput(String line) {
@@ -66,6 +65,7 @@ public class ClientGame implements Runnable {
 		switch (cmd[0]) {
 		case ProtocolMessages.SKIP_TURN:
 		case ProtocolMessages.CUSTOM_COMMAND + "fs":
+		case ProtocolMessages.CUSTOM_COMMAND + "fx":
 			if (cmd.length != 1) return;
 			server_handler.sendCommand(cmd[0], Arrays.asList(""));
 		case ProtocolMessages.CONNECT:
@@ -112,7 +112,12 @@ public class ClientGame implements Runnable {
 		this.player = player;
 	}
 	
-	public static void main(String[] args) {
-		new Thread(new ClientGame()).start();
+	public List<IPlayer> getPlayers() {
+		return players;
 	}
+	
+	public static void main(String[] args) {
+		new Thread(ClientGame.INSTANCE).start();
+	}
+
 }

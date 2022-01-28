@@ -111,6 +111,11 @@ public class ClientHandler implements Runnable, IClientHandler {
 				ServerGame.INSTANCE.print("> \u001b[36m[ROOM#" + room.getId() + ":" + client_id + "]\u001b[0m force start");
 				handleForceStart();
 				return;
+			case ProtocolMessages.CUSTOM_COMMAND + "fx":
+				if (cmd.length != 1) return;
+				ServerGame.INSTANCE.print("> \u001b[36m[ROOM#" + room.getId() + ":" + client_id + "]\u001b[0m force stop");
+				handleForceStop();
+				return;
 			default:
 			}
 		} catch (ProtocolException e) {
@@ -208,6 +213,8 @@ public class ClientHandler implements Runnable, IClientHandler {
 			String used_letters = board.getUsedTiles(coordinates, word, align);
 			if (!player.hasTiles(used_letters)) throw new NotOwnedTileException(player.getTiles() + ": " + used_letters);
 			
+			if (used_letters.length() == 7) player.addScore(50);
+			
 			player.removeTiles(used_letters);
 			used_letters = getNewTiles(used_letters.length());
 			player.addTiles(used_letters);
@@ -257,6 +264,10 @@ public class ClientHandler implements Runnable, IClientHandler {
 
 	public void handleForceStart() throws TooFewPlayersException {
 		room.start();
+	}
+	
+	public void handleForceStop() {
+		room.finish();
 	}
 	
 	private String getNewTiles(int amount) {

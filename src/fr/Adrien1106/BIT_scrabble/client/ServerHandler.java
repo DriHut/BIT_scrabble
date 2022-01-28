@@ -22,6 +22,7 @@ public class ServerHandler implements Runnable, IServerHandler {
 	private BufferedWriter output_reader;
 
 	private String name = "itsameee";
+	private String identifier = "";
 	
 	@Override
 	public void run() {
@@ -96,7 +97,7 @@ public class ServerHandler implements Runnable, IServerHandler {
 			handleGiveTile(cmd[1]);
 			return;
 		case ProtocolMessages.FINISH_GAME:
-			if (cmd.length != 2) return;
+			if (cmd.length != 3) return;
 			handleFinishGame(cmd[1],cmd[2]);
 			return;
 		default:
@@ -120,6 +121,7 @@ public class ServerHandler implements Runnable, IServerHandler {
 
 	@Override
 	public void handleFeedback(String feedback) {
+		if (feedback.contains("#")) identifier = feedback;
 		ClientGame.INSTANCE.log(feedback);
 	}
 
@@ -132,7 +134,7 @@ public class ServerHandler implements Runnable, IServerHandler {
 	public void handleInitiategame(String board, String players) {
 		for (String player: players.split(","))
 			ClientGame.INSTANCE.addPlayer(player);
-		ClientGame.INSTANCE.setPlayer(ClientGame.INSTANCE.getPlayer(name + "#1"));
+		ClientGame.INSTANCE.setPlayer(ClientGame.INSTANCE.getPlayer(identifier));
 		handleUpdateTable(board);
 	}
 

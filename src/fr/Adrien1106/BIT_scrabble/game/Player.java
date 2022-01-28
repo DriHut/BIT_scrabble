@@ -3,7 +3,6 @@ package fr.Adrien1106.BIT_scrabble.game;
 import java.util.ArrayList;
 import java.util.List;
 
-import fr.Adrien1106.BIT_scrabble.server.ServerGame;
 import fr.Adrien1106.BIT_scrabble.util.Tiles;
 import fr.Adrien1106.util.interfaces.IPlayer;
 
@@ -83,5 +82,9 @@ public class Player implements IPlayer {
 		for (Tiles tile: tile_rack)
 			tiles += tile.getLetter();
 		return tiles;
+	}
+
+	public List<Tiles> getTilesList() {
+		return tile_rack;
 	}
 }

@@ -171,7 +171,8 @@ public class Room implements IRoom {
 	/**
 	 * Ends the game
 	 */
-	private void finish() {
+	public void finish() {
+		if (current_player == null) return;
 		String best_player = "";
 		int best_score = 0;
 		for (IPlayer player: players) {

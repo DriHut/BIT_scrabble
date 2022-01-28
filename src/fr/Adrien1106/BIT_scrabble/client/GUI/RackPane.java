@@ -6,43 +6,45 @@ import java.util.List;
 import fr.Adrien1106.BIT_scrabble.client.ClientGame;
 import fr.Adrien1106.BIT_scrabble.main.References;
 import fr.Adrien1106.BIT_scrabble.util.Tiles;
+import fr.Adrien1106.BIT_scrabble.util.render.Scalable;
+import javafx.application.Platform;
 import javafx.scene.Node;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 
-public class RackPane extends Pane {
-	
+public class RackPane extends Pane implements Scalable {
+
+	public static final RackPane INSTANCE = new RackPane();
 	private double scale = 1d;
 	private Font font;
 	private Font sub_font;
 	
 	private List<Node> tiles;
 	
-	public RackPane() {
-		setBackground(new Background(new BackgroundFill(Color.RED, null, null)));
+	private RackPane() {
+		// setBackground(new Background(new BackgroundFill(Color.RED, null, null)));
 		tiles = new ArrayList<>();
 	}
 
-	public void updateTiles() {
-		this.tiles.forEach((node) -> {
-			if (node instanceof ImageView) ((ImageView) node).setImage(null);
+	public synchronized void updateTiles() {
+		Platform.runLater( () -> {
+			tiles.forEach((node) -> {
+				if (node instanceof ImageView) ((ImageView) node).setImage(null);
+			});
+			getChildren().removeAll(tiles);
+			tiles.clear();
 		});
-		getChildren().removeAll(tiles);
-		tiles.clear();
 		
-		Tiles[] tiles = new Tiles[] {};
-		tiles = ClientGame.INSTANCE.getPlayer().getTilesList().toArray(tiles);
-		for(int i = 0; i < tiles.length; i++) {
-			addTile((getWidth() - (References.BASE_SIZE * tiles.length * scale))/2 + i*References.BASE_SIZE * scale, (getHeight() - References.BASE_SIZE * scale)/2, References.BLANK_TILE);
-			if (!tiles[i].getLetter().equals("$")) {
-				addTileText((getWidth() - (References.BASE_SIZE * tiles.length * scale))/2 + ( i   *References.BASE_SIZE + 30) * scale, (getHeight() + References.BASE_SIZE * scale)/2 - 32 * scale, font,     References.TILE_COLOR, tiles[i].getLetter().toUpperCase());
-				addTileText((getWidth() - (References.BASE_SIZE * tiles.length * scale))/2 + ((i+1)*References.BASE_SIZE - 25) * scale, (getHeight() + References.BASE_SIZE * scale)/2 - 10 * scale, sub_font, References.TILE_COLOR, "" + tiles[i].getValue());
+		List<Tiles> tiles = ClientGame.INSTANCE.getPlayer().getTilesList();
+		for(int i = 0; i < tiles.size(); i++) {
+			addTile((getWidth() - (References.BASE_SIZE * tiles.size() * scale))/2 + i*References.BASE_SIZE * scale, (getHeight() - References.BASE_SIZE * scale)/2, References.BLANK_TILE);
+			if (!tiles.get(i).getLetter().equals("$")) {
+				addTileText((getWidth() - (References.BASE_SIZE * tiles.size() * scale))/2 + ( i   *References.BASE_SIZE + 30) * scale, (getHeight() + References.BASE_SIZE * scale)/2 - 32 * scale, font,     References.TILE_COLOR, tiles.get(i).getLetter().toUpperCase());
+				addTileText((getWidth() - (References.BASE_SIZE * tiles.size() * scale))/2 + ((i+1)*References.BASE_SIZE - 25) * scale, (getHeight() + References.BASE_SIZE * scale)/2 - 10 * scale, sub_font, References.TILE_COLOR, "" + tiles.get(i).getValue());
 			}
 		}
 	}
@@ -50,8 +52,10 @@ public class RackPane extends Pane {
 	private void addTile(double x, double y, Image img) {
 		if (img == null) return;
 		ImageView view = getView( x, y, img);
-		getChildren().add(view);
-		tiles.add(view);
+		Platform.runLater( () -> {
+			getChildren().add(view);
+			tiles.add(view);
+		});
 	}
 
 	private ImageView getView(double x, double y, Image img) {
@@ -66,8 +70,10 @@ public class RackPane extends Pane {
 	private void addTileText(double x, double y, Font ft, Color color, String msg) {
 		if (ft == null) return;
 		Text text = getText(x, y, ft, color, msg);
-        getChildren().add(text);
-		tiles.add(text);
+		Platform.runLater( () -> {
+			getChildren().add(text);
+			tiles.add(text);
+		});
 	}
 	
 	private Text getText(double x, double y, Font ft, Color color, String msg) {
@@ -77,7 +83,11 @@ public class RackPane extends Pane {
         return text;
 	}
 
+	@Override
 	public void updateScale() {
+		Platform.runLater( () -> {
+			getChildren().clear();
+		});
 		double min_dim = getHeight();
 		if (getWidth()/7 < min_dim) min_dim = getWidth()/7;
 

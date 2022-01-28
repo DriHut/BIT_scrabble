@@ -9,20 +9,21 @@ import fr.Adrien1106.BIT_scrabble.util.Board;
 import fr.Adrien1106.BIT_scrabble.util.Modifier;
 import fr.Adrien1106.BIT_scrabble.util.Tile;
 import fr.Adrien1106.BIT_scrabble.util.Tiles;
+import fr.Adrien1106.BIT_scrabble.util.render.Scalable;
+import javafx.application.Platform;
 import javafx.scene.Node;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.PixelReader;
 import javafx.scene.image.WritableImage;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 
-public class BoardPane extends Pane {
+public class BoardPane extends Pane implements Scalable {
 	
+	public static final BoardPane INSTANCE = new BoardPane();
 	private double scale = 1d;
 	private Font font;
 	private Font sub_font;
@@ -32,18 +33,20 @@ public class BoardPane extends Pane {
 	private List<Node> modifiers;
 	private List<Node> tiles;
 	
-	public BoardPane() {
-		setBackground(new Background(new BackgroundFill(Color.BLUE, null, null)));
+	private BoardPane() {
+		// setBackground(new Background(new BackgroundFill(Color.BLUE, null, null)));
 		modifiers = new ArrayList<>();
 		tiles = new ArrayList<>();
 	}
 
 	public void renderBoard() {
-		modifiers.forEach((node) -> {
-			if (node instanceof ImageView) ((ImageView) node).setImage(null);
+		Platform.runLater( () -> {
+			modifiers.forEach((node) -> {
+				if (node instanceof ImageView) ((ImageView) node).setImage(null);
+			});
+			getChildren().removeAll(modifiers);
+			modifiers.clear();
 		});
-		getChildren().removeAll(modifiers);
-		modifiers.clear();
 		
 		Modifier[][] modifiers = ClientGame.INSTANCE.getBoard().getModifiers();
 		for(int x = 0; x < Board.SIZE; x++)
@@ -95,12 +98,14 @@ public class BoardPane extends Pane {
 		}
 	}
 	
-	public void updateTiles() {
-		this.tiles.forEach((node) -> {
-			if (node instanceof ImageView) ((ImageView) node).setImage(null);
+	public synchronized void updateTiles() {
+		Platform.runLater( () -> {
+			tiles.forEach((node) -> {
+				if (node instanceof ImageView) ((ImageView) node).setImage(null);
+			});
+			getChildren().removeAll(tiles);
+			tiles.clear();
 		});
-		getChildren().removeAll(tiles);
-		tiles.clear();
 		
 		Tile[][] tiles = ClientGame.INSTANCE.getBoard().getTiles();
 		for(int x = 0; x < Board.SIZE; x++)
@@ -121,8 +126,10 @@ public class BoardPane extends Pane {
 	private void addTile(double x, double y, Image img) {
 		if (img == null) return;
 		ImageView view = getView( x, y, img);
-		getChildren().add(view);
-		tiles.add(view);
+		Platform.runLater( () -> {
+			getChildren().add(view);
+			tiles.add(view);
+		});
 	}
 
 	private ImageView getView(double x, double y, Image img) {
@@ -137,16 +144,19 @@ public class BoardPane extends Pane {
 	private void addModifier(double x, double y, Image img) {
 		if (img == null) return;
 		ImageView view = getView(x, y, img);
-		getChildren().add(view);
-		modifiers.add(view);
-		
+		Platform.runLater( () -> {
+			getChildren().add(view);
+			modifiers.add(view);
+		});
 	}
 	
 	private void addTileText(double x, double y, Font ft, Color color, String msg) {
 		if (ft == null) return;
 		Text text = getText(x, y, ft, color, msg);
-        getChildren().add(text);
-		tiles.add(text);
+		Platform.runLater( () -> {
+			getChildren().add(text);
+			tiles.add(text);
+		});
 	}
 	
 	private Text getText(double x, double y, Font ft, Color color, String msg) {
@@ -159,11 +169,17 @@ public class BoardPane extends Pane {
 	private void addText(double x, double y, Font ft, Color color, String msg) {
 		if (ft == null) return;
 		Text text = getText(x, y, ft, color, msg);
-        getChildren().add(text);
-		modifiers.add(text);
+		Platform.runLater( () -> {
+			getChildren().add(text);
+			modifiers.add(text);
+		});
 	}
 
+	@Override
 	public void updateScale() {
+		Platform.runLater( () -> {
+			getChildren().clear();
+		});
 		double min_dim = getHeight();
 		if (getWidth() < min_dim) min_dim = getWidth();
 

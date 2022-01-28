@@ -10,6 +10,9 @@ import java.net.Socket;
 import java.util.Arrays;
 import java.util.List;
 
+import fr.Adrien1106.BIT_scrabble.client.GUI.BoardPane;
+import fr.Adrien1106.BIT_scrabble.client.GUI.RackPane;
+import fr.Adrien1106.BIT_scrabble.client.GUI.ScorePane;
 import fr.Adrien1106.BIT_scrabble.game.Player;
 import fr.Adrien1106.BIT_scrabble.server.ServerGame;
 import fr.Adrien1106.util.interfaces.IServerHandler;
@@ -21,21 +24,23 @@ public class ServerHandler implements Runnable, IServerHandler {
 	private BufferedReader input_reader;
 	private BufferedWriter output_reader;
 
-	private String name = "itsameee";
+	public static String name = "";
 	private String identifier = "";
 	
 	@Override
 	public void run() {
 		try {
+			ClientGame.INSTANCE.print("> Enter your name");
+			while(name.equals("")) Thread.sleep(100);
 			setup();
 			sendCommand(ProtocolMessages.CONNECT, Arrays.asList(name));
 			String msg = input_reader.readLine();
-			while (msg != null) {
+			while (msg != null && ClientGame.IS_RUNNING) {
 				ClientGame.INSTANCE.print("> \u001b[32m[server]\u001b[0m Incoming: " + msg);
 				handleCommand(msg);
 				msg = input_reader.readLine();
 			}
-		} catch (IOException e) {
+		} catch (IOException | InterruptedException e) {
 			ClientGame.INSTANCE.log("A server IO error occurred: " + e.getMessage());
 		}
 	}
@@ -116,7 +121,7 @@ public class ServerHandler implements Runnable, IServerHandler {
 		if (ClientGame.INSTANCE.getPlayer() == null) return;
 		ClientGame.INSTANCE.getPlayer().removeTiles(ClientGame.INSTANCE.getPlayer().getTiles());
 		ClientGame.INSTANCE.getPlayer().addTiles(letters);
-		ClientGame.INSTANCE.print(ClientGame.INSTANCE.getPlayer().getTiles());
+		if (ClientGame.HAS_GUI) RackPane.INSTANCE.updateTiles();
 	}
 
 	@Override
@@ -124,6 +129,7 @@ public class ServerHandler implements Runnable, IServerHandler {
 		Player player = ClientGame.INSTANCE.getPlayer(identifier);
 		if (player == null) return;
 		player.setScore(Integer.valueOf(score));
+		if (ClientGame.HAS_GUI) ScorePane.INSTANCE.updateScores();
 	}
 
 	@Override
@@ -135,6 +141,7 @@ public class ServerHandler implements Runnable, IServerHandler {
 	@Override
 	public void handlePlayerJoin(String identifier) {
 		ClientGame.INSTANCE.addPlayer(identifier);
+		if (ClientGame.HAS_GUI) ScorePane.INSTANCE.updateScores();
 	}
 
 	@Override
@@ -148,7 +155,8 @@ public class ServerHandler implements Runnable, IServerHandler {
 	@Override
 	public void handleUpdateTable(String table) {
 		ClientGame.INSTANCE.getBoard().fromString(table);
-		ClientGame.INSTANCE.print(ClientGame.INSTANCE.getBoard().getString());
+		if (!ClientGame.HAS_GUI) ClientGame.INSTANCE.print(ClientGame.INSTANCE.getBoard().getString());
+		if (ClientGame.HAS_GUI) BoardPane.INSTANCE.updateTiles();
 	}
 
 	@Override

@@ -73,6 +73,12 @@ public class Room implements IRoom {
 	public void addPlayer(Player player) throws TooManyPlayersException  {
 		if (players.size() == max_players) throw new TooManyPlayersException(players.size()+1, max_players);
 		players.add(player);
+	}
+	
+	/**
+	 * try to start the room
+	 */
+	public void tryStart() {
 		if (players.size() == max_players)
 			try {
 				start();
@@ -141,11 +147,13 @@ public class Room implements IRoom {
 	 * Switch the current player to the next one
 	 */
 	public void next() {
-		ServerGame.INSTANCE.doUpdateScore(this, "" + current_player.getScore());
+		ServerGame.INSTANCE.doUpdateScore(this, current_player.getIdentifier() + ";" + current_player.getScore());
 		ServerGame.INSTANCE.doUpdateTable(this, board.toString());
 		for (int i = 0; i < players.size(); i++)
-			if (current_player.equals(players.get(i)))
+			if (current_player.equals(players.get(i))) {
 				current_player = (Player) players.get(i+1 == players.size()? 0: i+1);
+				return;
+			}
 	}
 
 	/**

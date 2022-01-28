@@ -74,30 +74,37 @@ public class ServerHandler implements Runnable, IServerHandler {
 		switch (cmd[0]) {
 		case ProtocolMessages.INITIATE_GAME:
 			if (cmd.length != 3) return;
+			ClientGame.INSTANCE.print("> \u001b[32m[server]\u001b[0m initiate game");
 			handleInitiategame(cmd[1], cmd[2]);
 			return;
 		case ProtocolMessages.UPDATE_TABLE:
 			if (cmd.length != 2) return;
+			ClientGame.INSTANCE.print("> \u001b[32m[server]\u001b[0m update table");
 			handleUpdateTable(cmd[1]);
 			return;
 		case ProtocolMessages.UPDATE_SCORE:
 			if (cmd.length != 3) return;
+			ClientGame.INSTANCE.print("> \u001b[32m[server]\u001b[0m update score");
 			handleUpdateScore(cmd[1],cmd[2]);
 			return;
 		case ProtocolMessages.ADD_OR_REMOVE_PLAYER:
 			if (cmd.length != 2) return;
+			ClientGame.INSTANCE.print("> \u001b[32m[server]\u001b[0m player join");
 			handlePlayerJoin(cmd[1]);
 			return;
 		case ProtocolMessages.FEEDBACK:
 			if (cmd.length != 2) return;
+			ClientGame.INSTANCE.print("> \u001b[32m[server]\u001b[0m feedback");
 			handleFeedback(cmd[1]);
 			return;
 		case ProtocolMessages.GIVE_TILE:
 			if (cmd.length != 2) return;
+			ClientGame.INSTANCE.print("> \u001b[32m[server]\u001b[0m receive tiles");
 			handleGiveTile(cmd[1]);
 			return;
 		case ProtocolMessages.FINISH_GAME:
 			if (cmd.length != 3) return;
+			ClientGame.INSTANCE.print("> \u001b[32m[server]\u001b[0m end game");
 			handleFinishGame(cmd[1],cmd[2]);
 			return;
 		default:

@@ -10,7 +10,7 @@ public class References {
 	
 	public static final int MAX_NAME_LENGTH = 10;
 	public static final int MAX_PLAYERS = 4;
-	public static final int MIN_PLAYERS = 1;
+	public static final int MIN_PLAYERS = 2;
 	
 	public static final Color BACKGROUND_COLOR = Color.valueOf("#005955");
 	public static final Image ICON = ImageUtils.loadImage("/sprites/icon.png");

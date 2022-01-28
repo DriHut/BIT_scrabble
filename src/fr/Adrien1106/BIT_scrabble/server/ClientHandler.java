@@ -171,6 +171,7 @@ public class ClientHandler implements Runnable, IClientHandler {
 	
 	@Override
 	public void handleConnect(String name) throws InvalidNameException {
+		if (player != null) return;
 		player = new Player(name + "#" + client_id);
 		sendCommand(ProtocolMessages.FEEDBACK, Arrays.asList(player.getIdentifier()));
 	}
@@ -199,6 +200,7 @@ public class ClientHandler implements Runnable, IClientHandler {
 		
 		ServerGame.INSTANCE.doJoin(room, player.getIdentifier());
 		sendCommand(ProtocolMessages.INITIATE_GAME, args);
+		room.tryStart();
 	}
 
 	@Override

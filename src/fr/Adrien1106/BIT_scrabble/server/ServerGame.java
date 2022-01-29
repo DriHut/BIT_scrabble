@@ -47,6 +47,9 @@ public class ServerGame implements ServerProtocol, Runnable {
 		}
 	}
 	
+	/**
+	 * Sets up the server instance and server socket listener
+	 */
 	private void setup() {
 		Dictionary.loadFromRessource();
 		clients = new ArrayList<>();
@@ -117,6 +120,11 @@ public class ServerGame implements ServerProtocol, Runnable {
 		for (ClientHandler handler: clients)
 			if (room.getPlayers().contains(handler.getPlayer())) handler.sendCommand(ProtocolMessages.UPDATE_TABLE, Arrays.asList(table));
 	}
+	
+	public synchronized void doUpdateCurrentPlayer(IRoom room, Player player) {
+		for (ClientHandler handler: clients)
+			if (room.getPlayers().contains(handler.getPlayer())) handler.sendCommand(ProtocolMessages.CUSTOM_COMMAND + "cp", Arrays.asList(player.getIdentifier()));
+	}
 
 	@Override
 	public synchronized void doFinish(IRoom room, String best_player, int score) {
@@ -129,24 +137,52 @@ public class ServerGame implements ServerProtocol, Runnable {
 		rooms.remove(room);
 	}
 	
+	/**
+	 * remove a given client from client list
+	 * @param client
+	 */
 	public void removeClient(ClientHandler client) {
 		this.clients.remove(client);
 	}
 	
+	/**
+	 * send a log to be printed
+	 * @param message - message to be logged
+	 */
 	public void log(String message) {
 		print("> \u001b[34m[LOG]\u001b[0m " + message);
 	}
 	
+	/**
+	 * print info to the given output
+	 * @param message - message to be printed
+	 */
 	public void print(String message) {
 		out.println(message);
 	}
 	
+	/**
+	 * Get room from id
+	 * @param id - the room id to get
+	 * @return the room or null if no such room
+	 */
 	public synchronized Room getRoom(int id) {
 		for (IRoom room: rooms) 
 			if (room.getId() == id) return (Room) room;
 		return null;
 	}
+
+	/**
+	 * @return the list of all the rooms
+	 */
+	public synchronized List<IRoom> getRooms() {
+		return rooms;
+	}
 	
+	/**
+	 * run server instance
+	 * @param args
+	 */
 	public static void main(String[] args) {
 		new Thread(ServerGame.INSTANCE).start();
 	}

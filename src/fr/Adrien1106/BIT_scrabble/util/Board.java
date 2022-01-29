@@ -315,10 +315,16 @@ public class Board implements IBoard {
 		return board;
 	}
 	
+	/**
+	 * @return the modifier array of the board
+	 */
 	public Modifier[][] getModifiers() {
 		return modifiers;
 	}
 
+	/**
+	 * @return the tile array of the board
+	 */
 	public Tile[][] getTiles() {
 		return tiles;
 	}

@@ -58,6 +58,11 @@ Z(10,"z");
 		return value;
 	}
 	
+	/**
+	 * Determines a tile from a letter
+	 * @param letter - the letter of the wanted tile
+	 * @return the tile or the default one
+	 */
 	public static Tile fromLetter(String letter) {
 		for (Tile tile: Tiles.values()) {
 			if (tile.getLetter().equalsIgnoreCase(letter))

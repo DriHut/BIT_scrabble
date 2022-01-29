@@ -39,6 +39,9 @@ public class BoardPane extends Pane implements Scalable {
 		tiles = new ArrayList<>();
 	}
 
+	/**
+	 * Render the board background
+	 */
 	public void renderBoard() {
 		Platform.runLater( () -> {
 			modifiers.forEach((node) -> {
@@ -93,11 +96,14 @@ public class BoardPane extends Pane implements Scalable {
 		
 		String Alpahbet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 		for(int i = 0; i < Board.SIZE; i++) {
-			addText((((i+1) * References.BASE_SIZE) + 30 ) * scale, (References.BASE_SIZE - 10) * scale, font, References.TEXT_COLOR, Alpahbet.substring(i,i+1));
-			addText(20 * scale, (((i+2) * References.BASE_SIZE) - 32 ) * scale, font, References.TEXT_COLOR, "" + (i+1));
+			addText((i+1.5) * References.BASE_SIZE * scale, References.BASE_SIZE * scale * 0.6, font, References.TEXT_COLOR, Alpahbet.substring(i,i+1));
+			addText(References.BASE_SIZE * scale * 0.54, (i+1.5) * References.BASE_SIZE* scale, font, References.TEXT_COLOR, "" + (i+1));
 		}
 	}
 	
+	/**
+	 * Update the board tiles render
+	 */
 	public synchronized void updateTiles() {
 		Platform.runLater( () -> {
 			tiles.forEach((node) -> {
@@ -112,11 +118,20 @@ public class BoardPane extends Pane implements Scalable {
 			for(int y = 0; y < Board.SIZE; y++)
 				if (!tiles[x][y].equals(Tiles.EMPTY)) {
 					addTile((x+1) * References.BASE_SIZE * scale, (y+1) * References.BASE_SIZE * scale, References.BLANK_TILE);
-					addTileText( (((x+1) * References.BASE_SIZE) + 30 ) * scale, (((y+2) * References.BASE_SIZE) - 32 ) * scale, font, References.TILE_COLOR, tiles[x][y].getSubLetter().toUpperCase());
-					addTileText( (((x+2) * References.BASE_SIZE) - 25 ) * scale, (((y+2) * References.BASE_SIZE) - 10 ) * scale, sub_font, References.TILE_COLOR, "" + tiles[x][y].getValue());
+					addTileText( (x+1.5) * References.BASE_SIZE * scale, (y+1.5) * References.BASE_SIZE * scale, font, References.TILE_COLOR, tiles[x][y].getSubLetter().toUpperCase());
+					addTileText( (x+1.85) * References.BASE_SIZE * scale, (y+1.85) * References.BASE_SIZE * scale, sub_font, References.TILE_COLOR, "" + tiles[x][y].getValue());
 				}
 	}
 	
+	/**
+	 * Crop a given image (used for modifiers on the side)
+	 * @param left - left offset
+	 * @param up - up offset
+	 * @param right - right offset
+	 * @param down - down offset
+	 * @param img - the image to be cropped
+	 * @return
+	 */
 	private Image crop(int left, int up, int right, int down, Image img) {
 		PixelReader reader = img.getPixelReader();
 		WritableImage new_image = new WritableImage(reader, left, down, (int)img.getWidth() - left - right, (int)img.getHeight() - up - down);
@@ -160,9 +175,11 @@ public class BoardPane extends Pane implements Scalable {
 	}
 	
 	private Text getText(double x, double y, Font ft, Color color, String msg) {
-		Text text = new Text(offset_x + x, offset_y + y, msg);
+		Text text = new Text(msg);
         text.setFont(ft);
         text.setFill(color);
+        text.setLayoutX(offset_x + x - text.getLayoutBounds().getWidth()/2);
+        text.setLayoutY(offset_y + y + text.getLayoutBounds().getHeight()/4);
         return text;
 	}
 	

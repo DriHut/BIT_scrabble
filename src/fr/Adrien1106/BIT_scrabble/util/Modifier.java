@@ -28,6 +28,11 @@ DOUBLE_LETTER(2, "DL");
 		return id;
 	}
 	
+	/**
+	 * Determine what modifier matched a given id
+	 * @param id - string identifier
+	 * @return the modifier associated to this identifier or the default one
+	 */
 	public static Modifier fromId(String id) {
 		for(Modifier value: Modifier.values())
 			if (value.getId().equalsIgnoreCase(id))

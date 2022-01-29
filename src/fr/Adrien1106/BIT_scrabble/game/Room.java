@@ -71,15 +71,22 @@ public class Room implements IRoom {
 	 * @throws TooManyPlayersException 
 	 */
 	public void addPlayer(Player player) throws TooManyPlayersException  {
-		if (players.size() == max_players) throw new TooManyPlayersException(players.size()+1, max_players);
+		if (isFull()) throw new TooManyPlayersException(players.size()+1, max_players);
 		players.add(player);
 	}
 	
 	/**
+	 * @return if the room is full
+	 */
+	public boolean isFull() {
+		return players.size() == max_players;
+	}
+
+	/**
 	 * try to start the room
 	 */
 	public void tryStart() {
-		if (players.size() == max_players)
+		if (isFull())
 			try {
 				start();
 			} catch (TooFewPlayersException e) {}
@@ -152,6 +159,7 @@ public class Room implements IRoom {
 		for (int i = 0; i < players.size(); i++)
 			if (current_player.equals(players.get(i))) {
 				current_player = (Player) players.get(i+1 == players.size()? 0: i+1);
+				ServerGame.INSTANCE.doUpdateCurrentPlayer(this, current_player);
 				return;
 			}
 	}
@@ -182,7 +190,7 @@ public class Room implements IRoom {
 	public void finish() {
 		if (current_player == null) return;
 		String best_player = "";
-		int best_score = 0;
+		int best_score = -1;
 		for (IPlayer player: players) {
 			if (((Player) player).getScore() == best_score) best_player += "," + ((Player) player).getName();
 			if (((Player) player).getScore() > best_score) {

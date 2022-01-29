@@ -30,6 +30,9 @@ public class RackPane extends Pane implements Scalable {
 		tiles = new ArrayList<>();
 	}
 
+	/**
+	 * Update the rack tiles to be rendered
+	 */
 	public synchronized void updateTiles() {
 		Platform.runLater( () -> {
 			tiles.forEach((node) -> {
@@ -43,12 +46,18 @@ public class RackPane extends Pane implements Scalable {
 		for(int i = 0; i < tiles.size(); i++) {
 			addTile((getWidth() - (References.BASE_SIZE * tiles.size() * scale))/2 + i*References.BASE_SIZE * scale, (getHeight() - References.BASE_SIZE * scale)/2, References.BLANK_TILE);
 			if (!tiles.get(i).getLetter().equals("$")) {
-				addTileText((getWidth() - (References.BASE_SIZE * tiles.size() * scale))/2 + ( i   *References.BASE_SIZE + 30) * scale, (getHeight() + References.BASE_SIZE * scale)/2 - 32 * scale, font,     References.TILE_COLOR, tiles.get(i).getLetter().toUpperCase());
-				addTileText((getWidth() - (References.BASE_SIZE * tiles.size() * scale))/2 + ((i+1)*References.BASE_SIZE - 25) * scale, (getHeight() + References.BASE_SIZE * scale)/2 - 10 * scale, sub_font, References.TILE_COLOR, "" + tiles.get(i).getValue());
+				addTileText((getWidth() - (References.BASE_SIZE * tiles.size() * scale))/2 + (i+0.5) * References.BASE_SIZE * scale, (getHeight() - References.BASE_SIZE * scale)/2 + References.BASE_SIZE * scale * 0.5, font,     References.TILE_COLOR, tiles.get(i).getLetter().toUpperCase());
+				addTileText((getWidth() - (References.BASE_SIZE * tiles.size() * scale))/2 + (i+0.85) * References.BASE_SIZE * scale, (getHeight() - References.BASE_SIZE * scale)/2 + References.BASE_SIZE * scale * 0.85, sub_font, References.TILE_COLOR, "" + tiles.get(i).getValue());
 			}
 		}
 	}
 	
+	/**
+	 * Create a blank tile component
+	 * @param x - x position
+	 * @param y - y position
+	 * @param img - the image of the blank tile
+	 */
 	private void addTile(double x, double y, Image img) {
 		if (img == null) return;
 		ImageView view = getView( x, y, img);
@@ -67,6 +76,14 @@ public class RackPane extends Pane implements Scalable {
 		return view;
 	}
 	
+	/**
+	 * Add a text label on top of the blank tile background
+	 * @param x - x position
+	 * @param y - y position
+	 * @param ft - font
+	 * @param color - colour of the text
+	 * @param msg - text to put on the label
+	 */
 	private void addTileText(double x, double y, Font ft, Color color, String msg) {
 		if (ft == null) return;
 		Text text = getText(x, y, ft, color, msg);
@@ -77,9 +94,11 @@ public class RackPane extends Pane implements Scalable {
 	}
 	
 	private Text getText(double x, double y, Font ft, Color color, String msg) {
-		Text text = new Text(x, y, msg);
+		Text text = new Text(msg);
         text.setFont(ft);
         text.setFill(color);
+        text.setLayoutX(x - text.getLayoutBounds().getWidth()/2);
+        text.setLayoutY(y + text.getLayoutBounds().getHeight()/4);
         return text;
 	}
 

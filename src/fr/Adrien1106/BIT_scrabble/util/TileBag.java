@@ -12,6 +12,10 @@ public enum TileBag {
 		this.tile_list = tile_list;
 	}
 	
+	/**
+	 * convert the string to a tile bag
+	 * @return the list tile of the bag
+	 */
 	public List<Tiles> getBag() {
 		List<Tiles> bag = new ArrayList<>();
 		String[] letters = tile_list.split(",");

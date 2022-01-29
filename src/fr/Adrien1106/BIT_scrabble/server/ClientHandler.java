@@ -14,8 +14,10 @@ import fr.Adrien1106.BIT_scrabble.game.Player;
 import fr.Adrien1106.BIT_scrabble.game.Room;
 import fr.Adrien1106.BIT_scrabble.util.Align;
 import fr.Adrien1106.BIT_scrabble.util.Board;
+import fr.Adrien1106.util.exceptions.AlreadyInRoomException;
 import fr.Adrien1106.util.exceptions.CantPlaceWordHereException;
 import fr.Adrien1106.util.exceptions.InvalidNameException;
+import fr.Adrien1106.util.exceptions.NotInRoomException;
 import fr.Adrien1106.util.exceptions.NotOwnedTileException;
 import fr.Adrien1106.util.exceptions.NotTurnException;
 import fr.Adrien1106.util.exceptions.ProtocolException;
@@ -27,6 +29,7 @@ import fr.Adrien1106.util.exceptions.UnknownTileException;
 import fr.Adrien1106.util.exceptions.WordOutOfBoundsException;
 import fr.Adrien1106.util.exceptions.WrongCoordinateException;
 import fr.Adrien1106.util.interfaces.IClientHandler;
+import fr.Adrien1106.util.interfaces.IRoom;
 import fr.Adrien1106.util.protocol.ProtocolMessages;
 
 public class ClientHandler implements Runnable, IClientHandler {
@@ -72,6 +75,10 @@ public class ClientHandler implements Runnable, IClientHandler {
 		
 	}
 	
+	/**
+	 * Handle client command input
+	 * @param msg - the command sent by the client
+	 */
 	private void handleCommand(String msg) throws ArrayIndexOutOfBoundsException {
 		String[] cmd = msg.split(ProtocolMessages.DELIMITER);
 		try {
@@ -116,6 +123,11 @@ public class ClientHandler implements Runnable, IClientHandler {
 				ServerGame.INSTANCE.print("> \u001b[36m[ROOM#" + room.getId() + ":" + client_id + "]\u001b[0m force stop");
 				handleForceStop();
 				return;
+			case ProtocolMessages.CUSTOM_COMMAND + "rr":
+				if (cmd.length != 1) return;
+				ServerGame.INSTANCE.print("> \u001b[32m[CLIENT#" + client_id + "]\u001b[0m request rooms");
+				handleRoomRequest();
+				return;
 			default:
 			}
 		} catch (ProtocolException e) {
@@ -124,14 +136,24 @@ public class ClientHandler implements Runnable, IClientHandler {
 		}
 	}
 
+	/**
+	 * Set the room of the client
+	 * @param room - the room associated to this client
+	 */
 	public void setRoom(Room room) {
 		this.room = room;
 	}
 	
+	/**
+	 * @return this client room
+	 */
 	public Room getRoom() {
 		return room;
 	}
 
+	/**
+	 * Handle closing of player connection
+	 */
 	private void shutdown() {
 		ServerGame.INSTANCE.log("client is closing: " + client_id);
 		if (room != null) room.removePlayer(player);
@@ -145,6 +167,11 @@ public class ClientHandler implements Runnable, IClientHandler {
 		ServerGame.INSTANCE.removeClient(this);
 	}
 	
+	/**
+	 * Send a command to the client
+	 * @param command - the command to be sent
+	 * @param args - the arguments to be sent as a list
+	 */
 	public void sendCommand(String command, List<String> args) {
 		String msg = command;
 		for (String arg: args)
@@ -160,11 +187,11 @@ public class ClientHandler implements Runnable, IClientHandler {
 	}
 
 	@Override
-	public void handleCreateRoom(String player_number) throws NumberFormatException, TooManyPlayersException, TooFewPlayersException { //
+	public void handleCreateRoom(String player_number) throws NumberFormatException, TooManyPlayersException, TooFewPlayersException {
 		String room_id = ServerGame.INSTANCE.doCreateRoom(player_number);
 		try {
 			handleJoinRoom(room_id);
-		} catch (RoomFullException | UnknownRoomException e) { 
+		} catch (RoomFullException | UnknownRoomException | AlreadyInRoomException e) { 
 			ServerGame.INSTANCE.log(e.getMessage());
 		}
 	}
@@ -177,7 +204,8 @@ public class ClientHandler implements Runnable, IClientHandler {
 	}
 
 	@Override
-	public void handleJoinRoom(String room_id) throws RoomFullException, UnknownRoomException {
+	public void handleJoinRoom(String room_id) throws RoomFullException, UnknownRoomException, AlreadyInRoomException {
+		if (room != null) throw new AlreadyInRoomException();
 		int id = Integer.valueOf(room_id);
 		room = ServerGame.INSTANCE.getRoom(id);
 		if (room == null) throw new UnknownRoomException(id);
@@ -204,7 +232,8 @@ public class ClientHandler implements Runnable, IClientHandler {
 	}
 
 	@Override
-	public void handleMove(String alignment, String coordinates, String word) throws NotOwnedTileException, NotTurnException, WordOutOfBoundsException, UnknownTileException, WrongCoordinateException, CantPlaceWordHereException {
+	public void handleMove(String alignment, String coordinates, String word) throws NotOwnedTileException, NotTurnException, WordOutOfBoundsException, UnknownTileException, WrongCoordinateException, CantPlaceWordHereException, NotInRoomException {
+		if (room == null) throw new NotInRoomException();
 		Board board = (Board) room.getBoard();
 		Align align = Align.valueOf(alignment.toUpperCase());
 		
@@ -231,14 +260,16 @@ public class ClientHandler implements Runnable, IClientHandler {
 	}
 
 	@Override
-	public void handleSkip() throws NotTurnException {
+	public void handleSkip() throws NotTurnException, NotInRoomException {
+		if (room == null) throw new NotInRoomException();
 		if (!room.isTurn(player)) throw new NotTurnException();
 		room.next();
 		sendCommand(ProtocolMessages.FEEDBACK, Arrays.asList("true"));
 	}
 
 	@Override
-	public void handleReplaceTiles(String tiles) throws NotOwnedTileException, NotTurnException { 
+	public void handleReplaceTiles(String tiles) throws NotOwnedTileException, NotTurnException, NotInRoomException { 
+		if (room == null) throw new NotInRoomException();
 		if (!room.isTurn(player)) throw new NotTurnException();
 		if (!player.hasTiles(tiles)) throw new NotOwnedTileException(tiles);
 		String new_tiles = getNewTiles(tiles.length());
@@ -264,14 +295,45 @@ public class ClientHandler implements Runnable, IClientHandler {
 		room.next();
 	}
 
+	/**
+	 * Handles custom command for force starting a game when the minimum amount of player is reached
+	 * @throws TooFewPlayersException - when the room is not full enough
+	 * @throws NotInRoomException - when not in a room
+	 */
 	public void handleForceStart() throws TooFewPlayersException {
 		room.start();
 	}
 	
+	/**
+	 * Handles custom command for force stop a game
+	 * @throws NotInRoomException - when not in a room
+	 */
 	public void handleForceStop() {
 		room.finish();
 	}
+
+	/**
+	 * Handles the request room custom command
+	 */
+	private void handleRoomRequest() {
+		List<IRoom> rooms = ServerGame.INSTANCE.getRooms();
+		if (rooms.isEmpty()) {
+			sendCommand(ProtocolMessages.CUSTOM_COMMAND + "lr", Arrays.asList(" "));
+			return;
+		}
+		String msg = " ";
+		for (IRoom room: rooms) {
+			if (!((Room) room).isFull()) msg += room.getId() + ",";
+		}
+		if (msg.length() > 1) msg = msg.substring(0, msg.length()-1);
+		sendCommand(ProtocolMessages.CUSTOM_COMMAND + "lr", Arrays.asList(msg));
+	}
 	
+	/**
+	 * retrieves new tiles to give to the player
+	 * @param amount
+	 * @return new tiles to send to the player
+	 */
 	private String getNewTiles(int amount) {
 		String output = "";
 		for(int i = 0; i < amount; i++) {
@@ -282,6 +344,9 @@ public class ClientHandler implements Runnable, IClientHandler {
 		return output;
 	}
 
+	/**
+	 * @return the player associated to that client
+	 */
 	public Player getPlayer() {
 		return player;
 	}

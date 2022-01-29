@@ -5,14 +5,8 @@ import fr.Adrien1106.BIT_scrabble.client.GUI.BoardPane;
 import fr.Adrien1106.BIT_scrabble.client.GUI.CommandPane;
 import fr.Adrien1106.BIT_scrabble.client.GUI.RackPane;
 import fr.Adrien1106.BIT_scrabble.client.GUI.ScorePane;
-import fr.Adrien1106.BIT_scrabble.game.Player;
-import fr.Adrien1106.BIT_scrabble.util.Align;
 import fr.Adrien1106.BIT_scrabble.util.IO.GUIPrinter;
 import fr.Adrien1106.BIT_scrabble.util.render.Scalable;
-import fr.Adrien1106.BIT_scrabble.util.words.Dictionary;
-import fr.Adrien1106.util.exceptions.CantPlaceWordHereException;
-import fr.Adrien1106.util.exceptions.WordOutOfBoundsException;
-import fr.Adrien1106.util.exceptions.WrongCoordinateException;
 import javafx.application.Application;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Rectangle2D;
@@ -44,22 +38,14 @@ public class ScrabbleGUI extends Application {
         root_pane = new Pane();
         ClientGame game = ClientGame.INSTANCE;
         new Thread(game).start();
-
-		/*Dictionary.loadFromRessource();
-        try {
-			game.getBoard().place("F8", "h$or$n", Align.HORIZONTAL);
-			game.getBoard().saveMove();
-			game.setPlayer(new Player("a#1"));
-			game.addPlayer("a#1");
-			game.addPlayer("a#2");
-			game.getPlayer().addTiles("abcd$");
-		} catch (NumberFormatException | WrongCoordinateException | WordOutOfBoundsException
-				| CantPlaceWordHereException e) {e.printStackTrace();}*/
         
         setup();
         open();
     }
 	
+	/**
+	 * Sets up all the different panes that composes the scene
+	 */
 	private void setup() {
         Rectangle2D screen_bounds = Screen.getPrimary().getBounds();
         Scene scene = new Scene(root_pane, screen_bounds.getWidth()*0.8, screen_bounds.getHeight()*0.8);
@@ -85,6 +71,14 @@ public class ScrabbleGUI extends Application {
         stage.setScene(scene);
 	}
 	
+	/**
+	 * Sets up a pane dimensions giving its proportions for the size and the offset
+	 * @param pane - pane to set up
+	 * @param width_prop - width proportion
+	 * @param height_prop - height proportion
+	 * @param x_offset_prop - x offset proportion
+	 * @param y_offset_prop - y offset proportion
+	 */
 	private void setupPropotionalPane(Pane pane, double width_prop, double height_prop, double x_offset_prop, double y_offset_prop) {
 		root_pane.getChildren().add(pane);
         double width = root_pane.getWidth()*width_prop;

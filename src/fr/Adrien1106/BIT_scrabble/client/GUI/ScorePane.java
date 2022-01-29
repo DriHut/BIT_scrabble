@@ -29,6 +29,9 @@ public class ScorePane extends Pane implements Scalable {
 		texts = new ArrayList<>();
 	}
 
+	/**
+	 * Updates the score panel
+	 */
 	public synchronized void updateScores() {
 		Platform.runLater( () -> {
 			getChildren().removeAll(texts);
@@ -36,16 +39,26 @@ public class ScorePane extends Pane implements Scalable {
 		});
 		
 		List<IPlayer> players = ClientGame.INSTANCE.getPlayers();
+		Player current_player = ClientGame.INSTANCE.getCurrentPlayer();
 		String name = "";
 		for (int i = 0; i < players.size(); i++) {
 			name = ((Player) players.get(i)).getName();
-			if (((Player) players.get(i)).getIdentifier().equals(ClientGame.INSTANCE.getPlayer().getIdentifier())) name = "YOU";
+			if (players.get(i).equals(ClientGame.INSTANCE.getPlayer())) name = "You";
+			if (players.get(i).equals(current_player)) name = "> " + name;
 			double y = getHeight()/2 + (-players.size() + i*2 + 1) * References.BASE_SIZE * scale;
-			addText(getWidth()*0.1,                              y, font, References.TEXT_COLOR, name.toUpperCase());
+			addText(getWidth()*0.1,                              y, font, References.TEXT_COLOR, name);
 			addText(getWidth()*0.1 + References.BASE_SIZE*scale, y + References.BASE_SIZE/2 * scale, sub_font, References.TEXT_COLOR, "score: " + ((Player) players.get(i)).getScore());
 		}
 	}
 	
+	/**
+	 * add a text component
+	 * @param x - x position
+	 * @param y - y position
+	 * @param ft - font
+	 * @param color - colour of the text
+	 * @param msg - the text to put on the label
+	 */
 	private void addText(double x, double y, Font ft, Color color, String msg) {
 		if (ft == null) return;
 		Text text = new Text(x, y, msg);

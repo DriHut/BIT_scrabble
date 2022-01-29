@@ -36,5 +36,10 @@ public enum AnsiColor {
 			message = message.replace(color.getCode(), "");
 		return message;
 	}
+	
+	@Override
+	public String toString() {
+		return color_code;
+	}
 
 }

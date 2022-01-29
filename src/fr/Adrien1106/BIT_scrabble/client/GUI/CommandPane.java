@@ -51,6 +51,10 @@ public class CommandPane extends Pane implements Scalable {
 		getChildren().add(input);
 	}
 	
+	/**
+	 * Called when a key is pressed when focus is on the console input
+	 * @param event
+	 */
 	private void handleInput(KeyEvent event) {
 		switch (event.getCode()) {
 		case ENTER:
@@ -73,11 +77,19 @@ public class CommandPane extends Pane implements Scalable {
 			input.deselect();
 			event.consume();
 			break;
+		case SEMICOLON:
+			possibilities.clear();
+			break;
 		default:
 			break;
 		}
 	}
 
+	/**
+	 * Give the next selection for tab completion
+	 * @param origin - the default text
+	 * @return
+	 */
 	private String getNextEntry(String origin) {
 		if (possibilities.isEmpty()) return origin;
 		if (last_key + 1 < possibilities.size()) last_key++;

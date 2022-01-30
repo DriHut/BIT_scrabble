@@ -253,6 +253,7 @@ public class ClientHandler implements Runnable, IClientHandler {
 			player.addScore(score);
 			
 			board.saveMove();
+			room.breakSkipStreak();
 			room.next();
 		} catch (NumberFormatException e) {
 			throw new WrongCoordinateException(coordinates);
@@ -263,8 +264,8 @@ public class ClientHandler implements Runnable, IClientHandler {
 	public void handleSkip() throws NotTurnException, NotInRoomException {
 		if (room == null) throw new NotInRoomException();
 		if (!room.isTurn(player)) throw new NotTurnException();
-		room.next();
 		sendCommand(ProtocolMessages.FEEDBACK, Arrays.asList("true"));
+		room.skip();
 	}
 
 	@Override
@@ -292,6 +293,7 @@ public class ClientHandler implements Runnable, IClientHandler {
 		player.addTiles(new_tiles);
 
 		sendCommand(ProtocolMessages.GIVE_TILE, Arrays.asList(player.getTiles()));
+		room.breakSkipStreak();
 		room.next();
 	}
 

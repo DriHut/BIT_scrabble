@@ -24,6 +24,8 @@ public class Room implements IRoom {
 	private Board board;
 	
 	private Player current_player;
+	private Player finishing_player;
+	private int skip_streak = 0;
 	
 	private int max_players;
 	private int min_players;
@@ -149,19 +151,49 @@ public class Room implements IRoom {
 	public boolean isTurn(Player player) {
 		return current_player.equals(player);
 	}
+	
+	/**
+	 * breaks skip streak
+	 */
+	public void breakSkipStreak() {
+		skip_streak = 0;
+		for (IPlayer p: players)
+			if (((Player) p).getTiles().length() == 0) return;
+		finishing_player = null;
+	}
+	
+	/**
+	 * used to keep track of the skip streak
+	 */
+	public void skip() {
+		if (finishing_player == null) finishing_player = current_player;
+		if (current_player.equals(finishing_player) && finishing_player.getTiles().length() != 0) skip_streak++;
+		next();
+	}
 
 	/**
 	 * Switch the current player to the next one
 	 */
 	public void next() {
-		ServerGame.INSTANCE.doUpdateScore(this, current_player.getIdentifier() + ";" + current_player.getScore());
-		ServerGame.INSTANCE.doUpdateTable(this, board.toString());
+		Player last_player = current_player;
 		for (int i = 0; i < players.size(); i++)
 			if (current_player.equals(players.get(i))) {
 				current_player = (Player) players.get(i+1 == players.size()? 0: i+1);
-				ServerGame.INSTANCE.doUpdateCurrentPlayer(this, current_player);
-				return;
+				break;
 			}
+		
+		boolean stopping = shouldStop();
+		ServerGame.INSTANCE.doUpdateTable(this, board.toString());
+		if (!stopping) ServerGame.INSTANCE.doUpdateScore(this, last_player.getIdentifier() + ";" + last_player.getScore());
+		
+		if (!stopping) {
+			ServerGame.INSTANCE.doUpdateCurrentPlayer(this, current_player);
+			if ((current_player.getTiles().length() == 0 || bag.size() == 0) && finishing_player != null) finishing_player = current_player;
+		} else finish();
+	}
+
+	private boolean shouldStop() {
+		return current_player.equals(finishing_player) && (skip_streak == 0 || skip_streak == 2);
 	}
 
 	/**
@@ -189,16 +221,63 @@ public class Room implements IRoom {
 	 */
 	public void finish() {
 		if (current_player == null) return;
-		String best_player = "";
-		int best_score = -1;
-		for (IPlayer player: players) {
-			if (((Player) player).getScore() == best_score) best_player += "," + ((Player) player).getName();
-			if (((Player) player).getScore() > best_score) {
-				best_score = ((Player) player).getScore();
-				best_player = ((Player) player).getName();
+		calculateFinalScores(false);
+		List<IPlayer> best_players = getBestPlayers(players);
+		
+		if (best_players.size() > 1) {
+			calculateFinalScores(true);
+			best_players = getBestPlayers(best_players);
+		}
+		
+		String best_player = ((Player) best_players.get(0)).getName();
+		for (int i = 1; i < best_players.size(); i++)
+			best_player += "," + ((Player) best_players.get(i)).getName();
+		for (IPlayer p: players)
+			ServerGame.INSTANCE.doUpdateScore(this, ((Player) p).getIdentifier() + ";" + ((Player) p).getScore());
+		ServerGame.INSTANCE.doFinish(this, best_player, ((Player) best_players.get(0)).getScore());
+	}
+	
+	/**
+	 * Gets a list off the best player in the given list
+	 * @param players - players list in which we want a winner
+	 * @return the best players
+	 */
+	private List<IPlayer> getBestPlayers(List<IPlayer> players) {
+		List<IPlayer> best_players = new ArrayList<>();
+
+		int best_score = -1000; // to handle force stopping
+		for (IPlayer p: players) {
+			Player player = (Player) p;
+			if (player.getScore() == best_score) best_players.add(player);
+			if (player.getScore() > best_score) {
+				best_score = player.getScore();
+				best_players.add(player);
 			}
 		}
 		
-		ServerGame.INSTANCE.doFinish(this,best_player, best_score);
+		return best_players;
+	}
+
+	/**
+	 * Calculate the final score by retrieving all the point from the owned tiles and adding the point to the players that have used all the tiles
+	 * @param reverse - boolean condition for reversing the final scoring action
+	 */
+	private void calculateFinalScores(boolean reverse) {
+		// remove all needed points
+		int extra_point = 0;
+		for (IPlayer p: players) {
+			Player player = (Player) p;
+			if (player.getTiles().length() != 0)
+				for(Tiles tile: ((Player) player).getTilesList()) {
+					extra_point += tile.getValue();
+					player.addScore(tile.getValue() * (reverse? 1: -1));
+				}
+		}
+		
+		for (IPlayer p: players) {
+			Player player = (Player) p;
+			if (player.getTiles().length() == 0)
+				player.addScore(extra_point * (reverse? -1: 1));
+		}
 	}
 }

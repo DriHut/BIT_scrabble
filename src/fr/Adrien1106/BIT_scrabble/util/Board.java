@@ -1,6 +1,7 @@
 package fr.Adrien1106.BIT_scrabble.util;
 
 import fr.Adrien1106.BIT_scrabble.exceptions.CantPlaceLetterHereException;
+import fr.Adrien1106.BIT_scrabble.server.ServerGame;
 import fr.Adrien1106.BIT_scrabble.util.words.Dictionary;
 import fr.Adrien1106.util.exceptions.*;
 import fr.Adrien1106.util.interfaces.IBoard;
@@ -66,7 +67,7 @@ public class Board implements IBoard {
 		int y = Integer.valueOf(coordinate.substring(1)) - 1;
 		
 		if (!isOnBoard(x, y)) throw new WrongCoordinateException(coordinate);
-		if (!isOnBoard(x + word.length()*align.getDirection().getX(), y + word.length()*align.getDirection().getY())) throw new WordOutOfBoundsException();
+		if (!isOnBoard(x + (word.length()-1)*align.getDirection().getX(), y + (word.length()-1)*align.getDirection().getY())) throw new WordOutOfBoundsException();
 		
 		buildCopy();
 		
@@ -85,7 +86,7 @@ public class Board implements IBoard {
 				if (is_sub_letter) tile = new BlankTile(letter);;
 				score += placeTile(new_x, new_y, tile, align);
 			} catch (CantPlaceLetterHereException e) {
-				e.printStackTrace();
+				ServerGame.INSTANCE.log(e.getMessage());
 				throw new CantPlaceWordHereException();
 			}
 			new_x += align.getDirection().getX();
@@ -167,7 +168,7 @@ public class Board implements IBoard {
 	 */
 	protected int placeTile(int x, int y, Tile letter, Align align) throws CantPlaceLetterHereException {
 		// ignore if letter already placed
-		if (tiles_copy[x][y].getLetter().equals(letter.getLetter())) return 0;
+		if (tiles_copy[x][y].getSubLetter().equals(letter.getSubLetter())) return 0;
 		
 		// place the letter on the copy
 		tiles_copy[x][y] = letter;

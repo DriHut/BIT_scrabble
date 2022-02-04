@@ -119,6 +119,7 @@ public class CommandPane extends Pane implements Scalable {
 			if (entry[0].startsWith(ProtocolMessages.CUSTOM_COMMAND)) {
 				if ("/fs".startsWith(entry[0])) possibilities.add("/fs");
 				if ("/fx".startsWith(entry[0])) possibilities.add("/fx");
+				if ("/rr".startsWith(entry[0])) possibilities.add("/rr");
 			}
 			if (ProtocolMessages.CREATE_ROOM.startsWith(entry[0])) possibilities.add(ProtocolMessages.CREATE_ROOM);
 			if (ProtocolMessages.JOIN_ROOM.startsWith(entry[0])) possibilities.add(ProtocolMessages.JOIN_ROOM);
@@ -128,7 +129,8 @@ public class CommandPane extends Pane implements Scalable {
 					|| ProtocolMessages.JOIN_ROOM.equals(entry[0])
 					|| ProtocolMessages.CREATE_ROOM.equals(entry[0])
 					|| "/fs".equals(entry[0])
-					|| "/fx".equals(entry[0]))
+					|| "/fx".equals(entry[0])
+					|| "/rr".equals(entry[0]))
 				possibilities.add(entry[0] + ";");
 			break;
 		case 2:

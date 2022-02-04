@@ -149,7 +149,7 @@ public class Room implements IRoom {
 	 * @return if it the player turn
 	 */
 	public boolean isTurn(Player player) {
-		return current_player.equals(player);
+		return player.equals(current_player);
 	}
 	
 	/**
@@ -251,6 +251,7 @@ public class Room implements IRoom {
 			if (player.getScore() == best_score) best_players.add(player);
 			if (player.getScore() > best_score) {
 				best_score = player.getScore();
+				best_players.clear();
 				best_players.add(player);
 			}
 		}

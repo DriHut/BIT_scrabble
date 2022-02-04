@@ -12,6 +12,7 @@ import java.util.List;
 import fr.Adrien1106.BIT_scrabble.game.Player;
 import fr.Adrien1106.BIT_scrabble.game.Room;
 import fr.Adrien1106.BIT_scrabble.main.References;
+import fr.Adrien1106.BIT_scrabble.util.render.AnsiColor;
 import fr.Adrien1106.BIT_scrabble.util.words.Dictionary;
 import fr.Adrien1106.util.exceptions.TooFewPlayersException;
 import fr.Adrien1106.util.exceptions.TooManyPlayersException;
@@ -31,6 +32,12 @@ public class ServerGame implements ServerProtocol, Runnable {
 	private List<ClientHandler> clients;
 	private int last_client_id = 0;
 	private int last_room_id = 0;
+	
+	private ServerGame() {
+		Dictionary.loadFromRessource();
+		clients = new ArrayList<>();
+		rooms = new ArrayList<>();
+	}
 
 	@Override
 	public void run() {
@@ -51,13 +58,10 @@ public class ServerGame implements ServerProtocol, Runnable {
 	 * Sets up the server instance and server socket listener
 	 */
 	private void setup() {
-		Dictionary.loadFromRessource();
-		clients = new ArrayList<>();
-		rooms = new ArrayList<>();
 		while (server_socket == null) {
 			try {
 				server_socket = new ServerSocket(PORT, 0, InetAddress.getByName("127.0.0.1"));
-				log("Server started at port " + PORT);
+				info("Server started at port " + PORT);
 			} catch (IOException e) {
 				log("A server IO error occurred: " + e.getMessage());
 			}
@@ -69,7 +73,7 @@ public class ServerGame implements ServerProtocol, Runnable {
 		ClientHandler client_handler = new ClientHandler(client_id, socket);
 		new Thread(client_handler).start();
 		clients.add(client_handler);
-		log("new client connection: " + client_id);
+		info("new client connection: " + client_id);
 	}
 	
 	@Override
@@ -101,29 +105,43 @@ public class ServerGame implements ServerProtocol, Runnable {
 				handler.getPlayer().addTiles(tiles);
 				handler.sendCommand(ProtocolMessages.GIVE_TILE, Arrays.asList(handler.getPlayer().getTiles()));
 			}
+		doUpdateCurrentPlayer(room, (Player) room.getPlayers().get(0));
 	}
 
 	@Override
 	public synchronized void doJoin(IRoom room, String identifier) {
-		for (ClientHandler handler: clients)
-			if (room.getPlayers().contains(handler.getPlayer()) && !handler.getPlayer().getIdentifier().equals(identifier)) handler.sendCommand(ProtocolMessages.ADD_OR_REMOVE_PLAYER, Arrays.asList(identifier));
+		sendToAllInRoom(room, ProtocolMessages.ADD_OR_REMOVE_PLAYER, Arrays.asList(identifier), identifier);
 	}
 
 	@Override
 	public synchronized void doUpdateScore(IRoom room, String info) {
-		for (ClientHandler handler: clients)
-			if (room.getPlayers().contains(handler.getPlayer())) handler.sendCommand(ProtocolMessages.UPDATE_SCORE, Arrays.asList(info));
+		sendToAllInRoom(room, ProtocolMessages.UPDATE_SCORE, Arrays.asList(info), null);
 	}
 	
 	@Override
 	public synchronized void doUpdateTable(IRoom room, String table) {
-		for (ClientHandler handler: clients)
-			if (room.getPlayers().contains(handler.getPlayer())) handler.sendCommand(ProtocolMessages.UPDATE_TABLE, Arrays.asList(table));
+		sendToAllInRoom(room, ProtocolMessages.UPDATE_TABLE, Arrays.asList(table), null);
 	}
 	
+	/**
+	 * Send an update on who is the current playing player in the room
+	 * @param room - the room
+	 * @param player - the current player
+	 */
 	public synchronized void doUpdateCurrentPlayer(IRoom room, Player player) {
+		sendToAllInRoom(room, ProtocolMessages.CUSTOM_COMMAND + "cp", Arrays.asList(player.getIdentifier()), null);
+	}
+	
+	/**
+	 * Send message to all the player in a room
+	 * @param room - the room to send the info from
+	 * @param cmd - the command to be sent
+	 * @param args - the message arguements
+	 * @param except - the identifier of the player to which we don't send information to
+	 */
+	public synchronized void sendToAllInRoom(IRoom room, String cmd, List<String> args, String except) {
 		for (ClientHandler handler: clients)
-			if (room.getPlayers().contains(handler.getPlayer())) handler.sendCommand(ProtocolMessages.CUSTOM_COMMAND + "cp", Arrays.asList(player.getIdentifier()));
+			if (room.getPlayers().contains(handler.getPlayer()) && !handler.getPlayer().getIdentifier().equals(except)) handler.sendCommand(cmd, args);
 	}
 
 	@Override
@@ -132,8 +150,8 @@ public class ServerGame implements ServerProtocol, Runnable {
 			if (room.getPlayers().contains(handler.getPlayer())) {
 				handler.setRoom(null);
 				handler.getPlayer().removeTiles(handler.getPlayer().getTiles());
-				handler.sendCommand(ProtocolMessages.FINISH_GAME, Arrays.asList(best_player, "" + score));
 			}
+		sendToAllInRoom(room, ProtocolMessages.FINISH_GAME, Arrays.asList(best_player, "" + score), null);
 		rooms.remove(room);
 	}
 	
@@ -150,7 +168,15 @@ public class ServerGame implements ServerProtocol, Runnable {
 	 * @param message - message to be logged
 	 */
 	public void log(String message) {
-		print("> \u001b[34m[LOG]\u001b[0m " + message);
+		print("> " + AnsiColor.TEXT_BLUE + "[LOG]" + AnsiColor.RESET + " " + message);
+	}
+	
+	/**
+	 * send an info to be printed
+	 * @param message - message to be printed
+	 */
+	public void info(String message) {
+		print("> " + AnsiColor.TEXT_MAGENTA + "[INFO]" + AnsiColor.RESET + " " + message);
 	}
 	
 	/**

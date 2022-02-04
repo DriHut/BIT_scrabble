@@ -12,6 +12,7 @@ import fr.Adrien1106.BIT_scrabble.util.Board;
 import fr.Adrien1106.BIT_scrabble.util.ModifierBoard;
 import fr.Adrien1106.BIT_scrabble.util.IO.Printer;
 import fr.Adrien1106.BIT_scrabble.util.IO.SystemPrinter;
+import fr.Adrien1106.BIT_scrabble.util.render.AnsiColor;
 import fr.Adrien1106.util.interfaces.IPlayer;
 import fr.Adrien1106.util.protocol.ProtocolMessages;
 
@@ -160,11 +161,19 @@ public class ClientGame implements Runnable {
 	}
 
 	/**
-	 * Print using a log information
-	 * @param message - to be logged
+	 * send a log to be printed
+	 * @param message - message to be logged
 	 */
 	public void log(String message) {
-		print("> \u001b[34m[LOG]\u001b[0m " + message);
+		print("> " + AnsiColor.TEXT_BLUE + "[LOG]" + AnsiColor.RESET + " " + message);
+	}
+	
+	/**
+	 * send an info to be printed
+	 * @param message - message to be printed
+	 */
+	public void info(String message) {
+		print("> " + AnsiColor.TEXT_MAGENTA + "[INFO]" + AnsiColor.RESET + " " + message);
 	}
 	
 	/**

@@ -1,0 +1,15 @@
+client:
+  test:
+    sub-test-1: "string 1"
+  # test comment
+    sub-test: "this \"is\" a test" # comment
+  test-2: "string 2"
+  test-3:
+    sub-test-3: "string 3"
+clients:
+  last-client-id: 10
+testings:
+  list: 10
+list-2: 10
+list-3: "test"
+aa: "tested"

@@ -155,7 +155,7 @@ public class ClientHandler implements Runnable, IClientHandler {
 	 * Handle closing of player connection
 	 */
 	private void shutdown() {
-		ServerGame.INSTANCE.log("client is closing: " + client_id);
+		ServerGame.INSTANCE.info("client is closing: " + client_id);
 		if (room != null) room.removePlayer(player);
 		try {
 			input_stream.close();

@@ -41,7 +41,7 @@ public class ServerHandler implements Runnable, IServerHandler {
 			sendCommand(ProtocolMessages.CONNECT, Arrays.asList(name));
 			String msg = input_reader.readLine();
 			while (msg != null && ClientGame.IS_RUNNING) {
-				ClientGame.INSTANCE.print("> \u001b[32m[server]\u001b[0m Incoming: " + msg);
+				inform("Incoming: " + msg);
 				handleCommand(msg);
 				msg = input_reader.readLine();
 			}
@@ -57,11 +57,11 @@ public class ServerHandler implements Runnable, IServerHandler {
 		while (socket == null) {
 			try {
 				InetAddress addr = InetAddress.getByName(ip_address);
-				ClientGame.INSTANCE.log("Attempting to connect to " + addr + ":"  + ServerGame.PORT + "...");
+				ClientGame.INSTANCE.info("Attempting to connect to " + addr + ":"  + ServerGame.PORT + "...");
 				socket = new Socket(addr, ServerGame.PORT);
 				input_reader = new BufferedReader(new InputStreamReader( socket.getInputStream()));
 				output_reader = new BufferedWriter(new OutputStreamWriter( socket.getOutputStream()));
-				ClientGame.INSTANCE.log("Connection restablished");
+				ClientGame.INSTANCE.info("Connection restablished");
 			} catch (IOException e) {
 				ClientGame.INSTANCE.log("could not create a socket on " + ip_address + ":" + ServerGame.PORT);
 			}
@@ -96,51 +96,55 @@ public class ServerHandler implements Runnable, IServerHandler {
 		switch (cmd[0]) {
 		case ProtocolMessages.INITIATE_GAME:
 			if (cmd.length != 3) return;
-			ClientGame.INSTANCE.print("> \u001b[32m[server]\u001b[0m initiate game");
+			inform("initiate game");
 			handleInitiategame(cmd[1], cmd[2]);
 			return;
 		case ProtocolMessages.UPDATE_TABLE:
 			if (cmd.length != 2) return;
-			ClientGame.INSTANCE.print("> \u001b[32m[server]\u001b[0m update table");
+			inform("update table");
 			handleUpdateTable(cmd[1]);
 			return;
 		case ProtocolMessages.UPDATE_SCORE:
 			if (cmd.length != 3) return;
-			ClientGame.INSTANCE.print("> \u001b[32m[server]\u001b[0m update score");
+			inform("update score");
 			handleUpdateScore(cmd[1],cmd[2]);
 			return;
 		case ProtocolMessages.ADD_OR_REMOVE_PLAYER:
 			if (cmd.length != 2) return;
-			ClientGame.INSTANCE.print("> \u001b[32m[server]\u001b[0m player join");
+			inform("player join");
 			handlePlayerJoin(cmd[1]);
 			return;
 		case ProtocolMessages.FEEDBACK:
 			if (cmd.length != 2) return;
-			ClientGame.INSTANCE.print("> \u001b[32m[server]\u001b[0m feedback");
+			inform("feedback");
 			handleFeedback(cmd[1]);
 			return;
 		case ProtocolMessages.GIVE_TILE:
 			if (cmd.length != 2) return;
-			ClientGame.INSTANCE.print("> \u001b[32m[server]\u001b[0m receive tiles");
+			inform("receive tiles");
 			handleGiveTile(cmd[1]);
 			return;
 		case ProtocolMessages.FINISH_GAME:
 			if (cmd.length != 3) return;
-			ClientGame.INSTANCE.print("> \u001b[32m[server]\u001b[0m end game");
+			inform("end game");
 			handleFinishGame(cmd[1],cmd[2]);
 			return;
 		case ProtocolMessages.CUSTOM_COMMAND + "lr":
 			if (cmd.length != 2) return;
-			ClientGame.INSTANCE.print("> \u001b[32m[server]\u001b[0m listing rooms");
+			inform("listing rooms");
 			handleListRoom(cmd[1]);
 			return;
 		case ProtocolMessages.CUSTOM_COMMAND + "cp":
 			if (cmd.length != 2) return;
-			ClientGame.INSTANCE.print("> \u001b[32m[server]\u001b[0m current player");
+			inform("current player");
 			handleCurrentPlayer(cmd[1]);
 			return;
 		default:
 		}
+	}
+
+	private void inform(String msg) {
+		ClientGame.INSTANCE.print("> " + AnsiColor.TEXT_GREEN + "[server] " + AnsiColor.RESET + msg);
 	}
 
 	@Override
@@ -161,8 +165,11 @@ public class ServerHandler implements Runnable, IServerHandler {
 
 	@Override
 	public void handleFeedback(String feedback) {
-		if (feedback.contains("#")) identifier = feedback;
-		ClientGame.INSTANCE.log(feedback);
+		if (feedback.contains("#")) {
+			identifier = feedback;
+			ClientGame.INSTANCE.print("> you can now create a room (cr;<num-players>) or join an existing one (jr;<room-id>) (you can also get a list of the rooms (/rr))");
+			return;
+		}
 	}
 
 	@Override
@@ -183,7 +190,6 @@ public class ServerHandler implements Runnable, IServerHandler {
 	@Override
 	public void handleUpdateTable(String table) {
 		ClientGame.INSTANCE.getBoard().fromString(table);
-		if (!ClientGame.HAS_GUI) ClientGame.INSTANCE.print(ClientGame.INSTANCE.getBoard().getString());
 		if (ClientGame.HAS_GUI) BoardPane.INSTANCE.updateTiles();
 	}
 
@@ -193,7 +199,7 @@ public class ServerHandler implements Runnable, IServerHandler {
 		Player c_player = ClientGame.INSTANCE.getPlayer();
 		c_player.removeTiles(c_player.getTiles());
 		c_player.setScore(0);
-		ClientGame.INSTANCE.print("> " + AnsiColor.TEXT_MAGENTA + "[info]" + AnsiColor.RESET + " Player(s) \"" + player + "\" won with a score of " + score);
+		ClientGame.INSTANCE.info("Player(s) \"" + player + "\" won with a score of " + score);
 		if (!ClientGame.HAS_GUI) return;
 		BoardPane.INSTANCE.updateTiles();
 		RackPane.INSTANCE.updateTiles();
@@ -205,10 +211,10 @@ public class ServerHandler implements Runnable, IServerHandler {
 	 */
 	private void handleListRoom(String room_list) {
 		if (room_list.equals(" ")) {
-			ClientGame.INSTANCE.print("> " + AnsiColor.TEXT_MAGENTA + "[info]" + AnsiColor.RESET + " no rooms are accessible");
+			ClientGame.INSTANCE.info("no rooms are accessible");
 			return;
 		}
-		ClientGame.INSTANCE.print("> " + AnsiColor.TEXT_MAGENTA + "[info]" + AnsiColor.RESET + " room(s):" + room_list);
+		ClientGame.INSTANCE.info("room(s):" + room_list);
 	}
 
 	/**
@@ -219,7 +225,23 @@ public class ServerHandler implements Runnable, IServerHandler {
 		Player player = ClientGame.INSTANCE.getPlayer(player_id);
 		if (player == null) return;
 		ClientGame.INSTANCE.setCurrentPlayer(player);
-		if (!ClientGame.HAS_GUI) ClientGame.INSTANCE.print("> " + AnsiColor.TEXT_MAGENTA + "[info]" + AnsiColor.RESET + " it is " + player.getName() + "'s turn");
+		if (!ClientGame.HAS_GUI) {
+			
+			List<IPlayer> players = ClientGame.INSTANCE.getPlayers();
+			String scores = ((Player) players.get(0)).getName() + ":" + ((Player) players.get(0)).getScore();
+			for (int i = 1; i < ClientGame.INSTANCE.getPlayers().size(); i++)
+				scores += ", " + ((Player) players.get(i)).getName() + ":" + ((Player) players.get(i)).getScore();
+			ClientGame.INSTANCE.info("Current scores are: " + scores);
+			
+			ClientGame.INSTANCE.print(ClientGame.INSTANCE.getBoard().getString());
+			
+			if (player.equals(ClientGame.INSTANCE.getPlayer())) ClientGame.INSTANCE.info("it is your turn!");
+			else ClientGame.INSTANCE.info("it is " + player.getName() + "'s turn.");
+			
+			ClientGame.INSTANCE.info("Your tiles are:" + ClientGame.INSTANCE.getPlayer().getTiles());
+			
+			if (player.equals(ClientGame.INSTANCE.getPlayer())) ClientGame.INSTANCE.print("> Please make a move (m;<align>;<coord>;<word>) for move (s) for skip (r;<letters>) to replace letters");
+		}
 		if (ClientGame.HAS_GUI) ScorePane.INSTANCE.updateScores();
 	}
 	
